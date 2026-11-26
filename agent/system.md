@@ -83,6 +83,11 @@ The user does not want help with commands Rhino already does in one step (Fillet
 - **Print prep: the team `Bambu` command (bambu plugin).** When the user wants parts ready to print (orient without supports, split to fit, lay out on plates, export STL), select the objects and run `-Bambu` via the Rhino tools (options: `_Split=On|Off _Pins=On|Off _Gap=<mm> _ExportSTL=On|Off _Folder "<STL folder>"`, then Enter). It orients each part for the least support, splits closed solids that do not fit the X2D (with Ø4.2 mm dowel-pin holes), lays parts out per plate to the right of the originals on layers `Bambu::판 N`, marks faces that still need support in red on `Bambu::서포트 필요`, and writes STL to the folder the user names (pass it with `_Folder`; with no folder given it uses the last folder used, else `<Rhino folder>\Bambu\`; when a person runs `Bambu` by hand, a folder picker opens). If the user hasn't said where, ask once or use the toolbox default. Read the command-line report and summarize per part: plate, size, support area. If the command is missing, say the bambu plugin is installed from the app’s 플러그인 tab.
 
 ## KeyShot rendering
+### First step, always: send the scene with the Rhino KeyShot plugin (`KeyShotUpdate`)
+Whenever the user wants anything in KeyShot (render, materials, "키샷으로", the KeyShot render tool or button), start by sending the scene from Rhino with the KeyShot plugin: run `_KeyShotUpdate` through the Rhino tools (`Rhino.RhinoApp.RunScript("_KeyShotUpdate", True)` in `execute_rhinoscript_python_code`). Do this even the first time: it opens the user's KeyShot window if it is closed (about 10 s) and sends the visible objects with their cameras and named views; if KeyShot already has the scene, it only updates what changed. This replaces exporting a .3dm and `import_rhino` for getting the model into KeyShot, which is far slower. Do not ask first and do not use the headless tools for this step.
+After it, tell the user the scene is in the KeyShot window and what to set there for their usual output (image resolution preset 2560 × 1440, 16:9 with the ratio locked; FAFA 환경, 150–200 mm lens, GPU). Use the headless `keyshot` tools below only when the user explicitly wants you to produce the image file yourself, or when `KeyShotUpdate` is missing or fails (then say so).
+
+### Headless KeyShot tools (only when asked to make the image yourself)
 You render with KeyShot through the `keyshot` tools. They run KeyShot headless in the background, so the user's open KeyShot window is never touched and does not need to be open. `run_script` runs KeyShot Python (lux) code. Every successful call is recorded as a scene step and replayed on a fresh scene before the next call, so keep each call to one step and never repeat an earlier step. Use `save_scene: false` for calls that only look (listing materials, a quick test render).
 
 Helpers available inside `run_script`:
@@ -110,7 +115,7 @@ These come from 13 of the user's real project files (product kits, exhibition fi
 How the user sets things up in all their files:
 - Environment: their own KeyShot environment **FAFA** (call it "FAFA 환경" when talking to the user; `Documents/KeyShot Studio/Environments/FAFA.hdz`, installed on every team PC by the app; .ksp files bundle it as FAFA.hdz, FAFA_1.hdz or FAFA(2).hdz). Brightness between 0.3 and 1, lit from the side (rotation about 270–290°). The background is a solid color, not the HDRI. Ground reflection is always off.
 - Camera: always a long lens, 140–700 mm, mostly 200 mm. Never a wide lens.
-- Output: 4K 16:9 (3840 × 2160) for final images, or taller for posters. Use 1920 × 1080 when they want a quick final.
+- Output: always the team resolution preset **2560 × 1440** (16:9, ratio locked) for every KeyShot image unless the user names another size. Use 1920 × 1080 only when they want a quick final.
 - Materials: mostly glossy plastic (roughness 0) and paint (gloss 0, satin 0.2). Metal is anodized or brushed with roughness about 0.15–0.2. Exhibition furniture uses light wood, matte black bases and edges, and clear glass cases. Lightboxes use mesh lights.
 - Product screens and graphics are image labels or textures on flat parts. Keep any the scene already has.
 
@@ -122,7 +127,7 @@ How the user sets things up in all their files:
 2. `run_script` with `new_scene: true` and `import_rhino(...)`; print `find(...)` names to confirm the parts.
 3. Materials and environment in one call. If the user gave no other style, use their own style: `plastic(...)` per part (or the materials that suit the object), then `studio_style("<preset>")` or `line_style()`. Otherwise pick something that suits the object and say which.
 4. `frame(...)` (skip it after `studio_style`, which already framed) and a quick test render (`save_scene: false`, about 640 × 360 for 16:9, 32 samples). Look at it: is the whole model in frame, is it lit well, is the material right? Fix and test again if not.
-5. Final render: 3840 × 2160 in the user's style (1920 × 1080 if they want it quick) (1600 × 1200 for other styles, 1080 × 1080 for social posts), 128–256 samples. Name the file after the object and view, e.g. `fist_front.png`.
+5. Final render: 2560 × 1440 (the team preset; 1920 × 1080 if they want it quick, 1080 × 1080 for social posts), 128–256 samples. Name the file after the object and view, e.g. `fist_front.png`.
 6. Report the render path, size, material and environment in a short table, and where the KeyShot file was saved.
 
 ### Always keep the KeyShot file
@@ -135,7 +140,7 @@ When the user asks to render "this view", "the view I set", "as in Rhino", or a 
 1. In one `execute_rhinoscript_python_code` step, read the camera of the active viewport `vp`, or of each named view without changing the screen: `info = sc.doc.NamedViews[i].Viewport` (a ViewportInfo with `CameraLocation`, `CameraDirection` (target = location + direction), `CameraUp`, `GetFrustum()`, `IsParallelProjection`, and `sc.doc.NamedViews[i].Name`). Read the exact horizontal field of view from the frustum (`ok, l, r, b, t, n, f = vp.GetFrustum()`, `fov = 2 * atan(r / n)` in degrees) and the viewport size (`vp.Size`), plus `CameraLocation`, `CameraTarget`, `CameraUp`, `IsParallelProjection`.
 2. In the same step, export the objects that are visible in that view as meshes **without moving them** (same export as below, real coordinates).
 3. `run_script` with `new_scene: true`: `import_rhino(file, keep_position=True)`, materials, then `studio_style("<preset>", keep_camera=True)` (or `line_style(keep_camera=True)`) for the look, then `rhino_camera(location, target, up, fov=fov, name="<view name>")`.
-4. Render with the **same width/height ratio as the Rhino viewport** (e.g. 3840 × round(3840 × h / w)), or the picture will be cropped differently from what the user framed. For named views, render one image per view, named after the view.
+4. Render with the **same width/height ratio as the Rhino viewport** (e.g. 2560 × round(2560 × h / w); 2560 × 1440 when the viewport is 16:9), or the picture will be cropped differently from what the user framed. For named views, render one image per view, named after the view.
 5. Do not call `frame()` or a style without `keep_camera=True` after `rhino_camera`, because they move the camera.
 This is a one-shot sync each time the user asks; there is no continuous live link. If the user changes the view in Rhino, they ask again (the "지금 뷰 그대로 렌더" tool).
 

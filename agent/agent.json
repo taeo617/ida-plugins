@@ -1,5 +1,5 @@
 {
-  "rules": { "version": "2026-11-26.3", "file": "system.md" },
+  "rules": { "version": "2026-11-26.4", "file": "system.md" },
   "environments": [
     { "name": "FAFA.hdz", "title": "FAFA 환경 (KeyShot)", "file": "environments/FAFA.hdz" }
   ]
