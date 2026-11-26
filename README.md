@@ -8,6 +8,7 @@ found/Founded 팀이 쓰는 Rhino 8 플러그인 모음이에요. 산업디자�
 |---|---|---|
 | 3export | `Export3` | 선택한 객체를 STEP·3DS·FBX로 한 번에 내보내 `(확장자)제품명_FOUNDFOUNDED` 폴더로 정리 |
 | NPatch | `NPatch`, `NPatchFill` | N각형 구멍을 매끈한 NURBS 서피스 한 장으로 채우기 (G0·G1·G2) |
+| ida-connect | `IdaConnect` | Rhino가 켜질 때 RhinoMCP(mcpstart)를 자동으로 켜서 에이전트와 연결 (`IdaConnect`에서 AutoConnect On/Off) |
 
 ## 폴더 구조
 
@@ -16,7 +17,8 @@ ida-plugins/
 ├─ plugins.json        ← 앱이 읽는 목록 (id, 버전, 설명, 파일 위치)
 ├─ dist/               ← 팀원에게 배포되는 설치 파일(.yak)
 ├─ 3export/          ← 소스(src/) + manifest.yml
-└─ npatch/           ← 소스(src/) + manifest.yml
+├─ npatch/           ← 소스(src/) + manifest.yml
+└─ ida-connect/      ← 소스(src/) + manifest.yml
 ```
 
 ## 새 버전 올리는 법 (3export 예시)

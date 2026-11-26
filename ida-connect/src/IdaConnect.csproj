@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>ida-connect</AssemblyName>
+    <RootNamespace>IDA.Connect</RootNamespace>
+    <TargetExt>.rhp</TargetExt>
+    <Version>1.0.0</Version>
+    <Title>ida-connect</Title>
+    <Description>Rhino가 켜질 때 RhinoMCP(mcpstart)를 자동으로 켜서 산업디자이너 에이전트와 바로 연결</Description>
+    <Company>found/Founded</Company>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Rhino 8.0 SDK 기준 → Rhino 8 아무 버전에서나 설치됨 -->
+    <PackageReference Include="RhinoCommon" Version="8.0.23304.9001" ExcludeAssets="runtime" />
+  </ItemGroup>
+</Project>

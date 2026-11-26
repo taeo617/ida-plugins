@@ -17,6 +17,15 @@
       "command": "NPatch, NPatchFill",
       "required": true,
       "file": "dist/npatch-0.3.0-rh8_0-win.yak"
+    },
+    {
+      "id": "ida-connect",
+      "title": "ida-connect · Rhino 자동 연결",
+      "description": "Rhino가 켜질 때 RhinoMCP를 자동으로 켜서 에이전트와 바로 연결해요. 파일을 더블클릭해서 Rhino를 열어도 연결돼요.",
+      "version": "1.0.0",
+      "command": "IdaConnect",
+      "required": true,
+      "file": "dist/ida-connect-1.0.0-rh8_0-win.yak"
     }
   ]
 }
