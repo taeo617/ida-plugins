@@ -1,6 +1,23 @@
 {
-  "rules": { "version": "2026-11-26.4", "file": "system.md" },
+  "rules": {
+    "version": "2026-11-26.4",
+    "file": "system.md"
+  },
   "environments": [
-    { "name": "FAFA.hdz", "title": "FAFA 환경 (KeyShot)", "file": "environments/FAFA.hdz" }
-  ]
+    {
+      "name": "FAFA.hdz",
+      "title": "FAFA 환경 (KeyShot)",
+      "file": "environments/FAFA.hdz"
+    }
+  ],
+  "keyshotDefaults": {
+    "version": "2560x1440-1",
+    "title": "KeyShot 새 장면·렌더 출력 해상도 2560×1440 (16:9 고정)",
+    "values": {
+      "defaultWidth": 2560,
+      "defaultHeight": 1440,
+      "output_width": 2560,
+      "output_height": 1440
+    }
+  }
 }
