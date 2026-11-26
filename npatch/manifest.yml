@@ -1,0 +1,13 @@
+name: npatch
+version: 0.3.0
+authors:
+- found/Founded
+description: >
+  N각형 구멍을 매끈한 NURBS 서피스 한 장으로 채우는 플러그인 (엣지별 G0·G1·G2).
+  명령어 NPatch(실시간 패널), NPatchFill(패널 없이).
+url: https://foundfounded.com
+keywords:
+- patch
+- fill
+- nsided
+- surface

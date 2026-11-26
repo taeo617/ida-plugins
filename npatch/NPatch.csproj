@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Rhino 8 loads both: .NET 7+ (default) and .NET Framework 4.8 (when started with /netfx). -->
+    <TargetFrameworks>net7.0;net48</TargetFrameworks>
+    <AssemblyName>NPatch</AssemblyName>
+    <RootNamespace>NPatch</RootNamespace>
+    <Version>0.3.0</Version>
+    <Title>NPatch</Title>
+    <Description>N-sided smooth hole filling (G0/G1) for Rhino.</Description>
+    <TargetExt>.rhp</TargetExt>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>NU1701;NETSDK1138</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="RhinoCommon" Version="8.0.23304.9001" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="dev/**" />
+  </ItemGroup>
+
+</Project>

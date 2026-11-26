@@ -8,6 +8,15 @@
       "command": "Export3",
       "required": true,
       "file": "dist/3export-1.0.0-rh8_0-win.yak"
+    },
+    {
+      "id": "npatch",
+      "title": "NPatch · N각형 구멍 채우기",
+      "description": "구멍 둘레 엣지·커브를 고르면 매끈한 NURBS 서피스 한 장으로 채워요. 엣지마다 G0·G1·G2, 실시간 패널·제브라 미리보기. xNURBS 대신 쓰는 무료 플러그인.",
+      "version": "0.3.0",
+      "command": "NPatch, NPatchFill",
+      "required": true,
+      "file": "dist/npatch-0.3.0-rh8_0-win.yak"
     }
   ]
 }

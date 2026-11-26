@@ -7,6 +7,7 @@ found/Founded 팀이 쓰는 Rhino 8 플러그인 모음이에요. ID AGENT 앱�
 | 이름 | Rhino 명령어 | 하는 일 |
 |---|---|---|
 | 3export | `Export3` | 선택한 객체를 STEP·3DS·FBX로 한 번에 내보내 `(확장자)제품명_FOUNDFOUNDED` 폴더로 정리 |
+| NPatch | `NPatch`, `NPatchFill` | N각형 구멍을 매끈한 NURBS 서피스 한 장으로 채우기 (G0·G1·G2) |
 
 ## 폴더 구조
 
@@ -14,7 +15,7 @@ found/Founded 팀이 쓰는 Rhino 8 플러그인 모음이에요. ID AGENT 앱�
 ida-plugins/
 ├─ plugins.json        ← 앱이 읽는 목록 (id, 버전, 설명, 파일 위치)
 ├─ dist/               ← 팀원에게 배포되는 설치 파일(.yak)
-└─ 3export/
+├─ 3export/
    ├─ src/             ← 소스 (C#, Rhino 8)
    └─ manifest.yml     ← Yak 패키지 정보
 ```
