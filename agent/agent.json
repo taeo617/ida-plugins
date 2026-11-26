@@ -1,0 +1,6 @@
+{
+  "rules": { "version": "2026-11-26.1", "file": "system.md" },
+  "environments": [
+    { "name": "FAFA.hdz", "title": "FAFA 환경 (KeyShot)", "file": "environments/FAFA.hdz" }
+  ]
+}

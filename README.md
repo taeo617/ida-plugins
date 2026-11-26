@@ -21,6 +21,13 @@ ida-plugins/
 └─ ida-connect/      ← 소스(src/) + manifest.yml
 ```
 
+## 에이전트 규칙 · KeyShot 환경 (`agent/`)
+
+앱은 켜질 때 `agent/agent.json`을 읽어요.
+
+- **규칙(`agent/system.md`)**: 에이전트가 따르는 작업 규칙이에요 (Rhino 모델링 방식, KeyShot 렌더 스타일 등). 고친 뒤 `agent.json`의 `rules.version`을 바꿔서(예: `2026-11-26.1` → `2026-11-27.1`) 푸시하면, 팀원 앱이 다음에 켜질 때 받아서 **새 대화부터** 적용해요. 앱 업데이트는 필요 없어요. 못 받으면 앱에 들어 있는 규칙을 써요.
+- **KeyShot 환경(`agent/environments/`)**: `FAFA.hdz`처럼 팀이 같이 쓰는 KeyShot 환경이에요. 팀원 PC의 `문서\KeyShot Studio\Environments`에 **없을 때만** 설치하고, 이미 있는 파일은 덮어쓰지 않아요.
+
 ## 새 버전 올리는 법 (3export 예시)
 
 1. `3export/src/Export3.csproj`와 `3export/manifest.yml`의 버전을 올려요 (예: 1.0.0 → 1.1.0).
