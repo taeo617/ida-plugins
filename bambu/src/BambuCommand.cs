@@ -50,12 +50,23 @@ namespace IDA.Bambu
             go.AddOptionToggle("Pins", ref optPins);
             go.AddOptionDouble("Gap", ref optGap);
             go.AddOptionToggle("ExportSTL", ref optExport);
+            int folderOpt = go.AddOption("Folder");
+            string outDir = null;          // 이번에 고른 STL 폴더 (null이면 내보낼 때 물어봄)
             // 미리 고른 객체가 있어도 옵션(Split=On 등)을 받을 수 있게: 미리 고른 걸 받은 뒤 Enter까지 옵션만 더 받음
             bool havePre = false;
             while (true)
             {
                 var r = go.GetMultiple(1, 0);
-                if (r == GetResult.Option) { go.EnablePreSelect(false, true); continue; }
+                if (r == GetResult.Option)
+                {
+                    go.EnablePreSelect(false, true);
+                    if (go.OptionIndex() == folderOpt)
+                    {
+                        var picked = mode == RunMode.Interactive ? PickFolder(DefaultFolder(doc, st)) : AskFolder(DefaultFolder(doc, st));
+                        if (picked != null) { outDir = picked; RhinoApp.WriteLine("STL 폴더: " + outDir); }
+                    }
+                    continue;
+                }
                 if (r == GetResult.Nothing && havePre) break;
                 if (r != GetResult.Object) return go.CommandResult();
                 if (go.ObjectsWerePreselected && !havePre)
@@ -168,10 +179,15 @@ namespace IDA.Bambu
             string folder = null;
             if (optExport.CurrentValue)
             {
+                // 폴더: 옵션에서 고른 곳 → (마우스로 실행하면) 저장 위치 묻기 → (스크립트면) 지난번 폴더 또는 Rhino 파일 옆 Bambu
+                folder = outDir ?? (mode == RunMode.Interactive ? PickFolder(DefaultFolder(doc, st)) : DefaultFolder(doc, st));
+                if (folder == null) RhinoApp.WriteLine("STL 저장을 취소했어요 (배치는 그대로 남아 있어요)");
+            }
+            if (folder != null)
+            {
                 string baseName = string.IsNullOrEmpty(doc.Name) ? "bambu" : Path.GetFileNameWithoutExtension(doc.Name);
-                string dir = !string.IsNullOrEmpty(doc.Path) ? Path.GetDirectoryName(doc.Path) : System.Environment.GetFolderPath(System.Environment.SpecialFolder.DesktopDirectory);
-                folder = Path.Combine(dir, "Bambu");
                 Directory.CreateDirectory(folder);
+                st.SetString("folder", folder);
                 for (int k = 0; k < plates; k++)
                 {
                     var joined = new Mesh();
@@ -204,6 +220,39 @@ namespace IDA.Bambu
                 if (mode == RunMode.Interactive) try { System.Diagnostics.Process.Start("explorer.exe", "\"" + folder + "\""); } catch { }
             }
             return Result.Success;
+        }
+
+        // 기본 STL 폴더: 지난번에 고른 곳 → Rhino 파일 옆 Bambu → 바탕화면Bambu
+        static string DefaultFolder(RhinoDoc doc, Rhino.PersistentSettings st)
+        {
+            var last = st.GetString("folder", "");
+            if (!string.IsNullOrEmpty(last) && Directory.Exists(last)) return last;
+            string dir = !string.IsNullOrEmpty(doc.Path) ? Path.GetDirectoryName(doc.Path) : System.Environment.GetFolderPath(System.Environment.SpecialFolder.DesktopDirectory);
+            return Path.Combine(dir, "Bambu");
+        }
+
+        // 폴더 고르기 창 (취소하면 null)
+        static string PickFolder(string start)
+        {
+            var dlg = new Eto.Forms.SelectFolderDialog { Title = "STL을 저장할 폴더를 고르세요" };
+            var d = start;
+            while (!string.IsNullOrEmpty(d) && !Directory.Exists(d)) d = Path.GetDirectoryName(d);
+            if (!string.IsNullOrEmpty(d)) dlg.Directory = d;
+            return dlg.ShowDialog(Rhino.UI.RhinoEtoApp.MainWindow) == Eto.Forms.DialogResult.Ok ? dlg.Directory : null;
+        }
+
+        // 스크립트용: -Bambu _Folder "C:경로" (Enter만 치면 기본 폴더)
+        static string AskFolder(string start)
+        {
+            var gs = new GetString();
+            gs.SetCommandPrompt("STL 저장 폴더");
+            gs.SetDefaultString(start);
+            gs.AcceptNothing(true);
+            var r = gs.GetLiteralString();
+            if (r == GetResult.Nothing) return start;
+            if (r != GetResult.String) return null;
+            var p = gs.StringResult().Trim().Trim((char)34);
+            return string.IsNullOrEmpty(p) ? start : p;
         }
 
         static Mesh BrepMesh(Brep b, MeshingParameters mp)

@@ -30,11 +30,11 @@
     {
       "id": "bambu",
       "title": "bambu · 뱀부 X2D 출력 준비",
-      "description": "선택한 객체를 서포트가 가장 적은 방향으로 눕히고, X2D 판(256×256×261mm)보다 크면 나눠 맞춤 핀 구멍을 내고, 판별로 배치해 STL로 내보내요. 서포트가 필요한 아랫면은 빨갛게 표시.",
-      "version": "1.0.0",
+      "description": "선택한 객체를 서포트가 가장 적은 방향으로 눕히고, X2D 판(256×256×261mm)보다 크면 나눠 맞춤 핀 구멍을 내고, 판별로 배치해 원하는 폴더에 STL로 내보내요. 서포트가 필요한 아랫면은 빨갛게 표시.",
+      "version": "1.0.1",
       "command": "Bambu",
       "required": true,
-      "file": "dist/bambu-1.0.0-rh8_0-win.yak"
+      "file": "dist/bambu-1.0.1-rh8_0-win.yak"
     }
   ]
 }
