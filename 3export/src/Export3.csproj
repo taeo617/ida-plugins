@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>3export</AssemblyName>
+    <RootNamespace>IDA.Export3</RootNamespace>
+    <TargetExt>.rhp</TargetExt>
+    <Version>1.0.0</Version>
+    <Title>3export</Title>
+    <Description>선택한 객체를 STEP·3DS·FBX로 한 번에 내보내 (확장자)제품명_FOUNDFOUNDED로 정리</Description>
+    <Company>found/Founded</Company>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Rhino 8.0 SDK 기준으로 빌드 → Rhino 8 아무 버전에서나 설치됨 -->
+    <PackageReference Include="RhinoCommon" Version="8.0.23304.9001" ExcludeAssets="runtime" />
+  </ItemGroup>
+</Project>
