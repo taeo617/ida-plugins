@@ -4,10 +4,10 @@
       "id": "3export",
       "title": "3export · 전시사 전달 파일",
       "description": "선택한 객체를 STEP·3DS·FBX로 한 번에 내보내 '(확장자)제품명_FOUNDFOUNDED' 폴더로 정리해요. mm 기준, 바닥 Z=0·탑뷰 중앙 정렬, 라인 제거, 텍스처는 '이미지 소스'로.",
-      "version": "1.0.0",
-      "command": "Export3",
+      "version": "1.0.1",
+      "command": "Export3 (또는 3export)",
       "required": true,
-      "file": "dist/3export-1.0.0-rh8_0-win.yak"
+      "file": "dist/3export-1.0.1-rh8_0-win.yak"
     },
     {
       "id": "npatch",

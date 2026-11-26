@@ -6,7 +6,7 @@ found/Founded 팀이 쓰는 Rhino 8 플러그인 모음이에요. 산업디자�
 
 | 이름 | Rhino 명령어 | 하는 일 |
 |---|---|---|
-| 3export | `Export3` | 선택한 객체를 STEP·3DS·FBX로 한 번에 내보내 `(확장자)제품명_FOUNDFOUNDED` 폴더로 정리 |
+| 3export | `Export3` 또는 `3export` | 선택한 객체를 STEP·3DS·FBX로 한 번에 내보내 `(확장자)제품명_FOUNDFOUNDED` 폴더로 정리 |
 | NPatch | `NPatch`, `NPatchFill` | N각형 구멍을 매끈한 NURBS 서피스 한 장으로 채우기 (G0·G1·G2) |
 | ida-connect | `IdaConnect` | Rhino가 켜질 때 RhinoMCP(mcpstart)를 자동으로 켜서 에이전트와 연결 (`IdaConnect`에서 AutoConnect On/Off) |
 

@@ -5,7 +5,7 @@
     <AssemblyName>3export</AssemblyName>
     <RootNamespace>IDA.Export3</RootNamespace>
     <TargetExt>.rhp</TargetExt>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Title>3export</Title>
     <Description>선택한 객체를 STEP·3DS·FBX로 한 번에 내보내 (확장자)제품명_FOUNDFOUNDED로 정리</Description>
     <Company>found/Founded</Company>
