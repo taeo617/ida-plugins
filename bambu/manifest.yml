@@ -1,0 +1,13 @@
+name: bambu
+version: 1.0.0
+authors:
+- found/Founded
+description: >
+  선택한 객체를 뱀부랩 X2D(256×256×261mm)에 맞게 서포트가 가장 적은 방향으로 눕히고,
+  판보다 크면 나누고(맞춤 핀 구멍), 판별로 배치해 STL로 내보냅니다. 명령어 Bambu.
+url: https://foundfounded.com
+keywords:
+- bambu
+- 3dprint
+- stl
+- layout
