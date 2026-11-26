@@ -1,6 +1,6 @@
 # ida-plugins
 
-found/Founded 팀이 쓰는 Rhino 8 플러그인 모음이에요. ID AGENT 앱의 **Rhino 플러그인** 탭이 이 저장소의 `plugins.json`을 읽어서, 팀원 PC에 설치하고 업데이트해 줘요.
+found/Founded 팀이 쓰는 Rhino 8 플러그인 모음이에요. 산업디자이너 에이전트 앱의 **도구 모음 → Rhino 플러그인** 탭이 이 저장소의 `plugins.json`을 읽어서, 팀원 PC에 설치하고 업데이트해 줘요.
 
 ## 플러그인
 
@@ -15,9 +15,8 @@ found/Founded 팀이 쓰는 Rhino 8 플러그인 모음이에요. ID AGENT 앱�
 ida-plugins/
 ├─ plugins.json        ← 앱이 읽는 목록 (id, 버전, 설명, 파일 위치)
 ├─ dist/               ← 팀원에게 배포되는 설치 파일(.yak)
-├─ 3export/
-   ├─ src/             ← 소스 (C#, Rhino 8)
-   └─ manifest.yml     ← Yak 패키지 정보
+├─ 3export/          ← 소스(src/) + manifest.yml
+└─ npatch/           ← 소스(src/) + manifest.yml
 ```
 
 ## 새 버전 올리는 법 (3export 예시)
