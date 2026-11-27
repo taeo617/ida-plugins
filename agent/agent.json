@@ -164,10 +164,10 @@
     },
     {
       "name": "bambu 출력 준비 예시.3dm",
-      "title": "높이 300mm 화분",
+      "title": "끼움 구조 조형 오브제 (부품 8개, 높이 325mm)",
       "tool": "plugin:bambu",
       "file": "examples/bambu 출력 준비 예시.3dm",
-      "version": "1"
+      "version": "2"
     }
   ]
 }
