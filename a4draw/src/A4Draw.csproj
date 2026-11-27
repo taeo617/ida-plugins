@@ -5,7 +5,7 @@
     <AssemblyName>a4draw</AssemblyName>
     <RootNamespace>IDA.A4Draw</RootNamespace>
     <TargetExt>.rhp</TargetExt>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <Title>a4draw</Title>
     <Description>선택한 객체의 탑뷰 Make2D에 치수를 넣고 A4 도면으로 배치해 SVG·AI(일러스트)·PDF로 내보내기</Description>
     <Company>found/Founded</Company>

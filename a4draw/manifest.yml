@@ -1,11 +1,11 @@
 name: a4draw
-version: 1.1.0
+version: 1.2.0
 authors:
 - found/Founded
 description: >
-  선택한 객체의 탑뷰(정면·측면도 가능) Make2D를 만들고 전체·주요 치수(33mm 식)를 넣어
-  A4 도곽에 실제 축척(1:1, 1:2 …)으로 배치한 뒤 SVG, AI(일러스트), 바로 인쇄할 PDF로 내보냅니다.
-  명령어 A4Drawing, 고친 뒤 다시 내보내기 A4DrawingExport.
+  선택한 객체를 Make2D로 탑뷰·정면·우측면 등 원하는 뷰와 3D(등각) 뷰로 만들어 전체·지름 치수를 넣고,
+  삼면도는 3각법으로 한 장에, 또는 뷰마다 한 장씩 A4 도곽에 실제 축척으로 배치해 SVG, AI, 바로 인쇄할 PDF로 내보냅니다.
+  A4Drawing을 실행하면 설정 창이 뜹니다. 고친 뒤 다시 내보내기 A4DrawingExport.
 url: https://foundfounded.com
 keywords:
 - drawing
