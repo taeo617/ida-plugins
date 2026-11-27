@@ -1,6 +1,6 @@
 {
   "rules": {
-    "version": "2026-11-27.3",
+    "version": "2026-11-27.4",
     "file": "system.md"
   },
   "environments": [
@@ -168,6 +168,20 @@
       "tool": "plugin:bambu",
       "file": "examples/bambu 출력 준비 예시.3dm",
       "version": "3"
+    },
+    {
+      "name": "A4 도면 예시.3dm",
+      "title": "구멍·보스가 있는 브래킷",
+      "tool": "d-a4",
+      "file": "examples/A4 도면 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "A4 도면 예시.3dm",
+      "title": "구멍·보스가 있는 브래킷",
+      "tool": "plugin:a4draw",
+      "file": "examples/A4 도면 예시.3dm",
+      "version": "1"
     }
   ]
 }

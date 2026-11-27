@@ -1,0 +1,15 @@
+name: a4draw
+version: 1.0.0
+authors:
+- found/Founded
+description: >
+  선택한 객체의 탑뷰(정면·측면도 가능) Make2D를 만들고 전체·주요 치수(33mm 식)를 넣어
+  A4 도곽에 실제 축척(1:1, 1:2 …)으로 배치한 뒤 SVG와 AI(일러스트)로 내보냅니다.
+  명령어 A4Drawing, 고친 뒤 다시 내보내기 A4DrawingExport.
+url: https://foundfounded.com
+keywords:
+- drawing
+- make2d
+- svg
+- illustrator
+- a4

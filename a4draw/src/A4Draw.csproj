@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>a4draw</AssemblyName>
+    <RootNamespace>IDA.A4Draw</RootNamespace>
+    <TargetExt>.rhp</TargetExt>
+    <Version>1.0.0</Version>
+    <Title>a4draw</Title>
+    <Description>선택한 객체의 탑뷰 Make2D에 치수를 넣고 A4 도면으로 배치해 SVG·AI(일러스트)로 내보내기</Description>
+    <Company>found/Founded</Company>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Rhino 8.0 SDK 기준 → Rhino 8 아무 버전에서나 설치됨 -->
+    <PackageReference Include="RhinoCommon" Version="8.0.23304.9001" ExcludeAssets="runtime" />
+  </ItemGroup>
+</Project>

@@ -9,6 +9,7 @@ found/Founded 팀이 쓰는 Rhino 8 플러그인 모음이에요. 산업디자�
 | 3export | `Export3` 또는 `3export` | 선택한 객체를 STEP·3DS·FBX로 한 번에 내보내 `(확장자)제품명_FOUNDFOUNDED` 폴더로 정리 |
 | NPatch | `NPatch`, `NPatchFill` | N각형 구멍을 매끈한 NURBS 서피스 한 장으로 채우기 (G0·G1·G2) |
 | ida-connect | `IdaConnect` | Rhino가 켜질 때 RhinoMCP(mcpstart)를 자동으로 켜서 에이전트와 연결 (`IdaConnect`에서 AutoConnect On/Off) |
+| a4draw | `A4Drawing`, `A4DrawingExport` | 선택한 객체의 탑뷰 Make2D + 치수를 A4 도곽에 실제 축척으로 배치해 SVG·AI(일러스트)로 내보내기. 고친 뒤 다시 내보내기는 `A4DrawingExport` |
 | bambu | `Bambu` | 선택한 객체를 서포트가 가장 적은 방향으로 눕히고, 뱀부랩 X2D 판보다 크면 나누고(맞춤 핀 구멍), 판별로 배치해 STL로 내보내기 |
 
 ## 폴더 구조
@@ -20,7 +21,8 @@ ida-plugins/
 ├─ 3export/          ← 소스(src/) + manifest.yml
 ├─ npatch/           ← 소스(src/) + manifest.yml
 ├─ ida-connect/      ← 소스(src/) + manifest.yml
-└─ bambu/            ← 소스(src/) + manifest.yml
+├─ bambu/            ← 소스(src/) + manifest.yml
+└─ a4draw/           ← 소스(src/) + manifest.yml (시험 빌드: testbuild.sh)
 ```
 
 ## 에이전트 규칙 · KeyShot 환경 (`agent/`)
