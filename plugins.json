@@ -85,16 +85,6 @@
       "required": false,
       "source": "yak",
       "url": "https://files.mcneel.com/yak/packages/SnappingGecko-1.1.2-rh7_0-any.yak"
-    },
-    {
-      "id": "gh-dark-mode",
-      "title": "gh-dark-mode · Grasshopper 다크 모드 (무료)",
-      "description": "Grasshopper 화면을 어두운 테마로. GH Dark Mode 컴포넌트로 다크/라이트 전환(적용 후 Grasshopper 재시작), Override 컴포넌트로 색 직접 지정. Rhino 8.24 이상. 사용법: ida-plugins/free-plugins.md",
-      "version": "1.0.4",
-      "command": "Grasshopper 컴포넌트 › GH Dark Mode",
-      "required": false,
-      "source": "yak",
-      "url": "https://files.mcneel.com/yak/packages/gh-dark-mode-1.0.4-rh8_24-any.yak"
     }
   ]
 }
