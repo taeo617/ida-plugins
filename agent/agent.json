@@ -34,7 +34,7 @@
       "title": "필렛이 들어간 몸체",
       "tool": "m-unfillet",
       "file": "examples/01 필렛 지우기/필렛 지우기 예시.3dm",
-      "version": "2",
+      "version": "3",
       "folder": "01 필렛 지우기"
     },
     {
@@ -42,7 +42,7 @@
       "title": "R2 필렛 케이스",
       "tool": "m-refillet",
       "file": "examples/02 필렛 크기 바꾸기/필렛 크기 바꾸기 예시.3dm",
-      "version": "2",
+      "version": "3",
       "folder": "02 필렛 크기 바꾸기"
     },
     {
@@ -54,11 +54,19 @@
       "folder": "03 스케치 3D"
     },
     {
+      "name": "스케치 3D 예시.3dm",
+      "title": "텀블러 스케치 → 3D 결과 비교",
+      "tool": "m-sketch",
+      "file": "examples/03 스케치 3D/스케치 3D 예시.3dm",
+      "version": "1",
+      "folder": "03 스케치 3D"
+    },
+    {
       "name": "용량에 맞추기 예시.3dm",
       "title": "빈 컵 (약 260ml)",
       "tool": "m-fit-volume",
       "file": "examples/04 용량에 맞추기/용량에 맞추기 예시.3dm",
-      "version": "2",
+      "version": "3",
       "folder": "04 용량에 맞추기"
     },
     {
@@ -66,7 +74,7 @@
       "title": "STL 메쉬 리모컨",
       "tool": "m-mesh2nurbs",
       "file": "examples/05 메쉬 넙스 변환/메쉬 넙스 변환 예시.3dm",
-      "version": "2",
+      "version": "3",
       "folder": "05 메쉬 넙스 변환"
     },
     {
@@ -74,7 +82,7 @@
       "title": "구배 0·언더컷 커버",
       "tool": "a-mold",
       "file": "examples/06 사출 가능 체크/사출 가능 체크 예시.3dm",
-      "version": "2",
+      "version": "3",
       "folder": "06 사출 가능 체크"
     },
     {
@@ -82,7 +90,7 @@
       "title": "얇은 벽·오버행·열린 면 부품",
       "tool": "a-print",
       "file": "examples/07 3D 프린트 점검/3D 프린트 점검 예시.3dm",
-      "version": "2",
+      "version": "3",
       "folder": "07 3D 프린트 점검"
     },
     {
@@ -90,7 +98,7 @@
       "title": "한 레이어에 섞인 스피커 파트",
       "tool": "o-layers",
       "file": "examples/08 레이어 정리/레이어 정리 예시.3dm",
-      "version": "2",
+      "version": "3",
       "folder": "08 레이어 정리"
     },
     {
@@ -98,7 +106,7 @@
       "title": "재질이 섞인 스탠드 조명",
       "tool": "o-d5",
       "file": "examples/09 D5용 레이어 정리/D5용 레이어 정리 예시.3dm",
-      "version": "2",
+      "version": "3",
       "folder": "09 D5용 레이어 정리"
     },
     {
@@ -106,7 +114,7 @@
       "title": "이름 없는 휴대용 선풍기",
       "tool": "o-names",
       "file": "examples/10 객체 이름 붙이기/객체 이름 붙이기 예시.3dm",
-      "version": "2",
+      "version": "3",
       "folder": "10 객체 이름 붙이기"
     },
     {
@@ -114,7 +122,15 @@
       "title": "스피커 앞판",
       "tool": "g-pattern",
       "file": "examples/11 타공 패턴/타공 패턴 예시.3dm",
-      "version": "3",
+      "version": "4",
+      "folder": "11 타공 패턴"
+    },
+    {
+      "name": "타공 예시_그라데이션.png",
+      "title": "타공 패턴용 그라데이션 이미지",
+      "tool": null,
+      "file": "examples/11 타공 패턴/타공 예시_그라데이션.png",
+      "version": "1",
       "folder": "11 타공 패턴"
     },
     {
@@ -122,7 +138,7 @@
       "title": "비틀린 곡면 오브제",
       "tool": "g-slice",
       "file": "examples/12 단면 슬라이스/단면 슬라이스 예시.3dm",
-      "version": "2",
+      "version": "3",
       "folder": "12 단면 슬라이스"
     },
     {
@@ -130,23 +146,15 @@
       "title": "S 커브 + 모듈",
       "tool": "g-array",
       "file": "examples/13 커브 따라 배열/커브 따라 배열 예시.3dm",
-      "version": "2",
+      "version": "3",
       "folder": "13 커브 따라 배열"
-    },
-    {
-      "name": "변형안 비교 예시.gh",
-      "title": "슬라이더 4개짜리 판 정의 (그래스호퍼)",
-      "tool": "g-variants",
-      "file": "examples/14 변형안 비교/변형안 비교 예시.gh",
-      "version": "1",
-      "folder": "14 변형안 비교"
     },
     {
       "name": "도면 치수 예시.3dm",
       "title": "보조배터리",
       "tool": "d-make2d",
       "file": "examples/15 도면 치수/도면 치수 예시.3dm",
-      "version": "2",
+      "version": "3",
       "folder": "15 도면 치수"
     },
     {
@@ -154,7 +162,7 @@
       "title": "보조배터리",
       "tool": "d-dims",
       "file": "examples/15 도면 치수/도면 치수 예시.3dm",
-      "version": "2",
+      "version": "3",
       "folder": "15 도면 치수"
     },
     {
@@ -162,7 +170,7 @@
       "title": "재질·텍스처 들어간 스피커",
       "tool": "plugin:3export",
       "file": "examples/16 3export 전시사 전달/3export 전시사 전달 예시.3dm",
-      "version": "2",
+      "version": "3",
       "folder": "16 3export 전시사 전달"
     },
     {
@@ -178,7 +186,7 @@
       "title": "구멍 난 형상",
       "tool": "plugin:npatch",
       "file": "examples/17 NPatch 구멍 채우기/NPatch 구멍 채우기 예시.3dm",
-      "version": "2",
+      "version": "3",
       "folder": "17 NPatch 구멍 채우기"
     },
     {
@@ -186,7 +194,7 @@
       "title": "끼움 구조 조형 오브제 (부품 8개, 높이 325mm)",
       "tool": "plugin:bambu",
       "file": "examples/18 bambu 출력 준비/bambu 출력 준비 예시.3dm",
-      "version": "3",
+      "version": "4",
       "folder": "18 bambu 출력 준비"
     },
     {
@@ -194,7 +202,7 @@
       "title": "구멍·보스가 있는 브래킷",
       "tool": "d-a4",
       "file": "examples/19 A4 도면/A4 도면 예시.3dm",
-      "version": "1",
+      "version": "2",
       "folder": "19 A4 도면"
     },
     {
@@ -202,7 +210,7 @@
       "title": "구멍·보스가 있는 브래킷",
       "tool": "plugin:a4draw",
       "file": "examples/19 A4 도면/A4 도면 예시.3dm",
-      "version": "1",
+      "version": "2",
       "folder": "19 A4 도면"
     },
     {
