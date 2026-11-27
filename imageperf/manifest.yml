@@ -1,0 +1,15 @@
+name: imageperf
+version: 1.0.0
+authors:
+- found/Founded
+description: >
+  이미지 밝기로 구멍 크기(하프톤)나 구멍 유무를 정하는 타공 플러그인.
+  평면 판부터 복곡면 NURBS·폴리서피스까지, 법선 방향으로 트림 또는 불리언.
+  명령어 ImagePerf(실시간 패널, 이미지 끌어다 놓기), -ImagePerf(패널 없이 옵션으로).
+url: https://foundfounded.com
+keywords:
+- perforation
+- halftone
+- pattern
+- image
+- grill

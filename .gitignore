@@ -7,3 +7,8 @@ _install*
 */build2/
 */bin/
 */build-test/
+imageperf/dev/out/
+imageperf/dev/*.log
+imageperf/dev/rc_list.txt
+*.rhl
+*.3dmbak

@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Rhino 8 loads both: .NET 7+ (default) and .NET Framework 4.8 (when started with /netfx). -->
+    <TargetFrameworks>net7.0;net48</TargetFrameworks>
+    <AssemblyName>ImagePerf</AssemblyName>
+    <RootNamespace>ImagePerf</RootNamespace>
+    <Version>1.0.0</Version>
+    <Title>ImagePerf</Title>
+    <Description>Image-driven perforation (halftone holes) on flat and freeform surfaces.</Description>
+    <TargetExt>.rhp</TargetExt>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <LangVersion>latest</LangVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <NoWarn>NU1701;NETSDK1138</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="RhinoCommon" Version="8.0.23304.9001" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="dev/**" />
+  </ItemGroup>
+
+</Project>
+

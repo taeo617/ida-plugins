@@ -37,6 +37,15 @@
       "file": "dist/bambu-1.0.1-rh8_0-win.yak"
     },
     {
+      "id": "imageperf",
+      "title": "imageperf · 이미지 타공",
+      "description": "이미지(PNG·JPG) 밝기대로 구멍 크기(하프톤)나 구멍 유무를 정하는 타공. 평면 판부터 복곡면까지 법선 방향으로 트림·불리언, 원·육각·슬롯, 실시간 패널 미리보기와 이미지 끌어다 놓기.",
+      "version": "1.0.0",
+      "command": "ImagePerf",
+      "required": true,
+      "file": "dist/imageperf-1.0.0-rh8_0-win.yak"
+    },
+    {
       "id": "a4draw",
       "title": "a4draw · A4 도면 (SVG·AI)",
       "description": "선택한 객체의 탑뷰(정면·측면도 가능) Make2D에 전체·지름 치수(33mm 식)를 넣고, A4 도곽·표제란에 실제 축척(1:1, 1:2 …)으로 배치해 SVG와 일러스트 AI로 내보내요. 선 두께가 레이어별로 들어가고, 치수·글자는 일러스트에서 고칠 수 있어요.",
