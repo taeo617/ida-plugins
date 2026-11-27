@@ -31,6 +31,7 @@ namespace IDA.A4Draw
             var optTangent = new OptionToggle(st.GetBool("tangent", true), "Off", "On");
             var optExport = new OptionToggle(st.GetBool("export", true), "Off", "On");
             var optAi = new OptionToggle(st.GetBool("ai", true), "Off", "On");
+            var optPdf = new OptionToggle(st.GetBool("pdf", true), "Off", "On");
             string name = null, outDir = null;
 
             var go = new GetObject();
@@ -49,6 +50,7 @@ namespace IDA.A4Draw
                 go.AddOptionToggle("Tangent", ref optTangent);
                 go.AddOptionToggle("Export", ref optExport);
                 go.AddOptionToggle("AI", ref optAi);
+                go.AddOptionToggle("PDF", ref optPdf);
                 int nameOpt = go.AddOption("Name");
                 int folderOpt = go.AddOption("Folder");
                 var r = go.GetMultiple(1, 0);
@@ -83,7 +85,7 @@ namespace IDA.A4Draw
             }
             st.SetString("view", ViewNames[view]); st.SetString("scale", ScaleNames[scaleIx]);
             st.SetBool("hidden", optHidden.CurrentValue); st.SetBool("tangent", optTangent.CurrentValue);
-            st.SetBool("export", optExport.CurrentValue); st.SetBool("ai", optAi.CurrentValue);
+            st.SetBool("export", optExport.CurrentValue); st.SetBool("ai", optAi.CurrentValue); st.SetBool("pdf", optPdf.CurrentValue);
 
             var objs = Enumerable.Range(0, go.ObjectCount).Select(i => go.Object(i).Object()).Where(o => o != null).ToList();
             if (objs.Count == 0) return Result.Nothing;
@@ -258,7 +260,7 @@ namespace IDA.A4Draw
             string folder = outDir ?? (mode == RunMode.Interactive ? Export.PickFolder(Export.DefaultFolder(doc, st)) : Export.DefaultFolder(doc, st));
             if (folder == null) { RhinoApp.WriteLine("내보내기를 취소했어요 (도면은 Rhino에 그대로 있어요). 나중에 A4DrawingExport로 내보낼 수 있어요."); return Result.Success; }
             st.SetString("folder", folder);
-            Export.Run(doc, pageId.ToString(), folder, optAi.CurrentValue);
+            Export.Run(doc, pageId.ToString(), folder, optAi.CurrentValue, optPdf.CurrentValue);
             return Result.Success;
         }
 

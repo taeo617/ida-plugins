@@ -47,12 +47,12 @@
     },
     {
       "id": "a4draw",
-      "title": "a4draw · A4 도면 (SVG·AI)",
-      "description": "선택한 객체의 탑뷰(정면·측면도 가능) Make2D에 전체·지름 치수(33mm 식)를 넣고, A4 도곽·표제란에 실제 축척(1:1, 1:2 …)으로 배치해 SVG와 일러스트 AI로 내보내요. 선 두께가 레이어별로 들어가고, 치수·글자는 일러스트에서 고칠 수 있어요.",
-      "version": "1.0.0",
+      "title": "a4draw · A4 도면 (SVG·AI·PDF)",
+      "description": "선택한 객체의 탑뷰(정면·측면도 가능) Make2D에 전체·지름 치수(33mm 식)를 넣고, A4 도곽·표제란에 실제 축척(1:1, 1:2 …)으로 배치해 SVG, 일러스트 AI, 바로 인쇄할 PDF(A4 실제 크기)로 내보내요. 선 두께가 레이어별로 들어가고, 치수·글자는 일러스트에서 고칠 수 있어요.",
+      "version": "1.1.0",
       "command": "A4Drawing, A4DrawingExport",
       "required": true,
-      "file": "dist/a4draw-1.0.0-rh8_0-win.yak"
+      "file": "dist/a4draw-1.1.0-rh8_0-win.yak"
     },
     {
       "id": "drawprint",

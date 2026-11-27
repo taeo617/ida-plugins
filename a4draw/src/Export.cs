@@ -39,7 +39,7 @@ namespace IDA.A4Draw
             return dlg.ShowDialog(Rhino.UI.RhinoEtoApp.MainWindow) == Eto.Forms.DialogResult.Ok ? dlg.Directory : null;
         }
 
-        public static bool Run(RhinoDoc doc, string page, string folder, bool ai)
+        public static bool Run(RhinoDoc doc, string page, string folder, bool ai, bool pdf = false)
         {
             var objs = Page.ObjectsOf(doc, page);
             var frame = objs.FirstOrDefault(o => !string.IsNullOrEmpty(o.Attributes.GetUserString(Page.KeyFrame)));
@@ -54,17 +54,62 @@ namespace IDA.A4Draw
             string orient = pw > ph ? "A4 가로" : "A4 세로";
             string svgPath = Path.Combine(folder, $"{safe}_도면_{orient}.svg");
             string aiPath = Path.ChangeExtension(svgPath, ".ai");
+            string pdfPath = Path.ChangeExtension(svgPath, ".pdf");
 
             var svg = Svg(doc, objs, ox, oy, pw, ph, u);
             File.WriteAllText(svgPath, svg, new UTF8Encoding(false));
             RhinoApp.WriteLine("SVG 저장: " + svgPath);
 
-            if (ai)
+            var start = DateTime.UtcNow.AddSeconds(-2);
+            bool Fresh(string p) => File.Exists(p) && File.GetLastWriteTimeUtc(p) >= start;
+            if (ai || pdf)
             {
-                var msg = ToIllustrator(svgPath, aiPath);
-                RhinoApp.WriteLine(msg);
+                var msg = ToIllustrator(svgPath, ai ? aiPath : null, pdf ? pdfPath : null);
+                if (msg != null) RhinoApp.WriteLine(msg);
             }
+            // 일러스트레이터가 없거나 PDF를 못 만들었으면 Rhino로 A4 용지 영역을 1:1 벡터 PDF로
+            if (pdf && !Fresh(pdfPath))
+                RhinoApp.WriteLine(RhinoPdf(doc, ox, oy, f[2], f[3], pw, ph, pdfPath));
+            if (pdf && Fresh(pdfPath))
+                RhinoApp.WriteLine("  → PDF는 인쇄할 때 '실제 크기(100%)'로 찍으면 치수가 1:1로 맞아요.");
             return true;
+        }
+
+        // ---------- PDF (일러스트 없을 때): Rhino 인쇄 엔진으로 용지 영역만 위에서 1:1 ----------
+        static string RhinoPdf(RhinoDoc doc, double ox, double oy, double wDoc, double hDoc, double pw, double ph, string path)
+        {
+            try
+            {
+                var view = doc.Views.ActiveView ?? doc.Views.FirstOrDefault();
+                if (view == null) return "PDF: 열린 뷰가 없어 저장하지 못했어요.";
+                const int dpi = 600;
+                var media = new System.Drawing.Size((int)Math.Round(pw / 25.4 * dpi), (int)Math.Round(ph / 25.4 * dpi));
+                // 사용자 뷰는 건드리지 않고 복사본 뷰포트를 위에서 내려다보게
+                var vp = new Rhino.Display.RhinoViewport(view.ActiveViewport);
+                vp.ChangeToParallelProjection(true);
+                var c = new Point3d(ox + wDoc / 2, oy + hDoc / 2, 0);
+                vp.SetCameraLocations(c, c + Vector3d.ZAxis * Math.Max(wDoc, hDoc) * 10);
+                vp.CameraUp = Vector3d.YAxis;
+                var s = new Rhino.Display.ViewCaptureSettings(view, media, dpi);
+                s.SetViewport(vp);
+                s.SetMargins(UnitSystem.Millimeters, 0, 0, 0, 0);
+                s.SetWindowRect(new Point3d(ox, oy, 0), new Point3d(ox + wDoc, oy + hDoc, 0));
+                s.SetModelScaleToFit(false);
+                s.OutputColor = Rhino.Display.ViewCaptureSettings.ColorMode.PrintColor;
+                s.UsePrintWidths = true;
+                s.RasterMode = false;
+                s.DrawBackground = false; s.DrawBackgroundBitmap = false; s.DrawWallpaper = false;
+                s.DrawGrid = false; s.DrawAxis = false; s.DrawLights = false; s.DrawClippingPlanes = false;
+                s.DrawLockedObjects = true; s.DrawMargins = false;
+                var pdf = Rhino.FileIO.FilePdf.Create();
+                pdf.AddPage(s);
+                pdf.Write(path);
+                return File.Exists(path) ? "PDF 저장 (Rhino): " + path : "PDF: 저장하지 못했어요.";
+            }
+            catch (Exception e)
+            {
+                return "PDF: 저장하지 못했어요 (" + e.Message + "). PDF 파일이 열려 있으면 닫고 다시 해 보세요.";
+            }
         }
 
         // ---------- SVG ----------
@@ -246,12 +291,13 @@ namespace IDA.A4Draw
         }
 
         // ---------- 일러스트레이터 (.ai) ----------
-        static string ToIllustrator(string svgPath, string aiPath)
+        // aiPath·pdfPath 중 null인 것은 저장하지 않음. PDF만 원하는데 일러스트가 없으면 null (Rhino PDF로 넘어감)
+        static string ToIllustrator(string svgPath, string aiPath, string pdfPath)
         {
             var t = Type.GetTypeFromProgID("Illustrator.Application");
-            if (t == null) return "AI: 이 PC에 일러스트레이터가 없어 SVG만 저장했어요 (SVG를 일러스트에서 열고 다른 이름으로 저장하면 .ai가 돼요).";
+            if (t == null) return aiPath == null ? null : "AI: 이 PC에 일러스트레이터가 없어 AI는 건너뛰었어요 (SVG를 일러스트에서 열고 다른 이름으로 저장하면 .ai가 돼요).";
             bool wasRunning = Process.GetProcessesByName("Illustrator").Length > 0;
-            RhinoApp.WriteLine("AI: 일러스트레이터로 변환 중… (처음엔 일러스트가 켜지느라 조금 걸려요)");
+            RhinoApp.WriteLine("일러스트레이터로 " + (aiPath != null && pdfPath != null ? "AI·PDF" : aiPath != null ? "AI" : "PDF") + " 만드는 중… (처음엔 일러스트가 켜지느라 조금 걸려요)");
             string J(string p) => p.Replace("\\", "/").Replace("'", "\\'");
             // 맨 위 그룹(레이어별)을 일러스트 레이어로 바꾸고 .ai로 저장, 레이어별 선 두께(pt)·글자 수 보고
             string js = @"
@@ -270,8 +316,12 @@ namespace IDA.A4Draw
       g.move(L, ElementPlacement.PLACEATBEGINNING);
     }
     try { if (base.pageItems.length == 0) base.remove(); } catch (e) {}
-    var o = new IllustratorSaveOptions(); o.pdfCompatible = true; o.embedLinkedFiles = true;
-    doc.saveAs(new File('" + J(aiPath) + @"'), o);
+    var aiF = '" + (aiPath == null ? "" : J(aiPath)) + @"', pdfF = '" + (pdfPath == null ? "" : J(pdfPath)) + @"';
+    if (aiF) { var o = new IllustratorSaveOptions(); o.pdfCompatible = true; o.embedLinkedFiles = true; doc.saveAs(new File(aiF), o); }
+    // 인쇄용 PDF: 벡터, 대지(A4) 그대로, 글꼴 포함
+    if (pdfF) { var po = new PDFSaveOptions(); po.compatibility = PDFCompatibility.ACROBAT7; po.preserveEditability = false; po.generateThumbnails = false; po.viewAfterSaving = false;
+      try { po.artboardRange = '1'; } catch (e) {}
+      doc.saveAs(new File(pdfF), po); }
     var ab = doc.artboards[0].artboardRect;
     r.push('대지 ' + Math.round((ab[2] - ab[0]) / 72 * 25.4) + 'x' + Math.round((ab[1] - ab[3]) / 72 * 25.4) + 'mm');
     var walk = function (items, a) { for (var k = 0; k < items.length; k++) { var it = items[k];
@@ -287,20 +337,30 @@ namespace IDA.A4Draw
   }
   return r.join(' | ');
 })();";
+            var start = DateTime.UtcNow.AddSeconds(-2);
+            bool Fresh(string p) => p != null && File.Exists(p) && File.GetLastWriteTimeUtc(p) >= start;
+            string Saved(string extra)
+            {
+                var lines = new List<string>();
+                if (aiPath != null) lines.Add(Fresh(aiPath) ? "AI 저장: " + aiPath : "AI: 일러스트에서 저장하지 못했어요.");
+                if (Fresh(pdfPath)) lines.Add("PDF 저장 (일러스트): " + pdfPath);
+                else if (pdfPath != null) lines.Add("PDF: 일러스트에서 저장하지 못해 Rhino로 만들어요. (PDF가 다른 프로그램에 열려 있으면 닫아 주세요)");
+                if (!string.IsNullOrEmpty(extra)) lines.Add("  (" + extra + ")");
+                return string.Join("\n", lines);
+            }
             object app = null;
             try
             {
                 app = Activator.CreateInstance(t);
                 var res = t.InvokeMember("DoJavaScript", BindingFlags.InvokeMethod, null, app, new object[] { js });
                 if (!wasRunning) { try { t.InvokeMember("Quit", BindingFlags.InvokeMethod, null, app, null); } catch { } }
-                return File.Exists(aiPath) ? $"AI 저장: {aiPath}\n  ({res})" : "AI: 일러스트에서 저장하지 못했어요. " + res;
+                return Saved(res?.ToString());
             }
             catch (Exception e)
             {
                 var inner = e is TargetInvocationException tie && tie.InnerException != null ? tie.InnerException.Message : e.Message;
                 if (!wasRunning && app != null) { try { t.InvokeMember("Quit", BindingFlags.InvokeMethod, null, app, null); } catch { } }
-                if (File.Exists(aiPath)) return $"AI 저장: {aiPath} (보고는 못 받았어요: {inner})";
-                return "AI: 일러스트레이터 변환 실패 (" + inner + "). SVG는 저장됐어요.";
+                return Saved("일러스트 보고: " + inner);
             }
             finally
             {
@@ -318,6 +378,7 @@ namespace IDA.A4Draw
         {
             var st = A4DrawPlugIn.Instance.Settings;
             var optAi = new OptionToggle(st.GetBool("ai", true), "Off", "On");
+            var optPdf = new OptionToggle(st.GetBool("pdf", true), "Off", "On");
             string outDir = null, page = null;
             var go = new GetObject();
             go.SetCommandPrompt("내보낼 A4 도면의 아무 선이나 고르세요");
@@ -328,6 +389,7 @@ namespace IDA.A4Draw
             {
                 go.ClearCommandOptions();
                 go.AddOptionToggle("AI", ref optAi);
+                go.AddOptionToggle("PDF", ref optPdf);
                 int folderOpt = go.AddOption("Folder");
                 var r = go.Get();
                 if (r == GetResult.Option)
@@ -345,7 +407,7 @@ namespace IDA.A4Draw
                 page = go.Object(0).Object()?.Attributes.GetUserString(Page.KeyPage);
                 if (go.ObjectsWerePreselected && page != null)
                 {
-                    // 미리 고른 도면: 옵션(AI·Folder)을 더 받은 뒤 Enter
+                    // 미리 고른 도면: 옵션(AI·PDF·Folder)을 더 받은 뒤 Enter
                     go.EnablePreSelect(false, true);
                     go.AcceptNothing(true);
                     go.SetCommandPrompt("옵션을 바꾸거나 Enter");
@@ -353,12 +415,12 @@ namespace IDA.A4Draw
                 }
                 break;
             }
-            st.SetBool("ai", optAi.CurrentValue);
+            st.SetBool("ai", optAi.CurrentValue); st.SetBool("pdf", optPdf.CurrentValue);
             if (string.IsNullOrEmpty(page)) return Result.Failure;
             string folder = outDir ?? (mode == RunMode.Interactive ? Export.PickFolder(Export.DefaultFolder(doc, st)) : Export.DefaultFolder(doc, st));
             if (folder == null) return Result.Cancel;
             st.SetString("folder", folder);
-            return Export.Run(doc, page, folder, optAi.CurrentValue) ? Result.Success : Result.Failure;
+            return Export.Run(doc, page, folder, optAi.CurrentValue, optPdf.CurrentValue) ? Result.Success : Result.Failure;
         }
     }
 }
