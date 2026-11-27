@@ -13,6 +13,8 @@ namespace NPatch
     readonly int _w;
     readonly double[] _a;   // row i, column j (i-Bw ≤ j ≤ i) at i*_w + (j - i + Bw)
     bool _overflow;
+    /// <summary>True when a nonzero entry fell outside the band (the matrix is then not usable).</summary>
+    public bool Overflow => _overflow;
 
     public BandMatrix(int n, int bw)
     {
@@ -32,7 +34,43 @@ namespace NPatch
 
     public bool Solve(double[] b)
     {
+      Prof.Chol.Start(); Prof.Solves++;
+      if (!Factored) { Prof.Factors++; if (N > Prof.MaxN) { Prof.MaxN = N; Prof.MaxBw = Bw; } if (Bw >= N - 1 && N > 300) Prof.Dense++; }
+      try { return SolveCore(b); } finally { Prof.Chol.Stop(); }
+    }
+
+    /// <summary>True once factored; later <see cref="Solve"/> calls reuse the factor (only the right-hand side changes).</summary>
+    public bool Factored { get; private set; }
+
+    bool SolveCore(double[] b)
+    {
       if (_overflow) return false;
+      if (!Factored)
+      {
+        if (!Factor()) return false;
+        Factored = true;
+      }
+      int n = N, bw = Bw, w = _w;
+      var a = _a;
+      for (int i = 0; i < n; i++)
+      {
+        long ir = (long)i * w + bw - i;
+        double t = b[i];
+        for (int k = Math.Max(0, i - bw); k < i; k++) t -= a[ir + k] * b[k];
+        b[i] = t / a[ir + i];
+      }
+      for (int i = n - 1; i >= 0; i--)
+      {
+        double t = b[i];
+        int kEnd = Math.Min(n - 1, i + bw);
+        for (int k = i + 1; k <= kEnd; k++) t -= a[(long)k * w + bw - k + i] * b[k];
+        b[i] = t / a[(long)i * w + bw];
+      }
+      return true;
+    }
+
+    bool Factor()
+    {
       int n = N, bw = Bw, w = _w;
       var a = _a;
       for (int j = 0; j < n; j++)
@@ -54,21 +92,16 @@ namespace NPatch
           a[ir + j] = t / ljj;
         }
       }
-      for (int i = 0; i < n; i++)
-      {
-        long ir = (long)i * w + bw - i;
-        double t = b[i];
-        for (int k = Math.Max(0, i - bw); k < i; k++) t -= a[ir + k] * b[k];
-        b[i] = t / a[ir + i];
-      }
-      for (int i = n - 1; i >= 0; i--)
-      {
-        double t = b[i];
-        int kEnd = Math.Min(n - 1, i + bw);
-        for (int k = i + 1; k <= kEnd; k++) t -= a[(long)k * w + bw - k + i] * b[k];
-        b[i] = t / a[(long)i * w + bw];
-      }
       return true;
     }
+  }
+
+  /// <summary>Cumulative timers for profiling (dev harness reads and resets them).</summary>
+  internal static class Prof
+  {
+    public static readonly System.Diagnostics.Stopwatch Chol = new System.Diagnostics.Stopwatch(), Report = new System.Diagnostics.Stopwatch(), Trim = new System.Diagnostics.Stopwatch();
+    public static int Solves, Trimmed, Factors, MaxN, MaxBw, Dense;
+    public static void Reset() { Chol.Reset(); Report.Reset(); Trim.Reset(); Solves = Trimmed = Factors = MaxN = MaxBw = Dense = 0; }
+    public static string Text() => $"chol {Chol.ElapsedMilliseconds}ms/{Solves} solves/{Factors} factors, maxN {MaxN} bw {MaxBw}, dense {Dense}, report {Report.ElapsedMilliseconds}ms, trimmedSolves {Trimmed}";
   }
 }

@@ -50,6 +50,8 @@ namespace NPatch
           // More spans until the hole's edges fit (long, strongly curved edges need them).
           var r = NSidedFill.Refine(o => SolveLayout(inputs, sides, lay, guide, o, tol), opt, tol);
           if (r.Brep != null) results.Add(r); else why += (why.Length > 0 ? "; " : "") + r.Message;
+          // Layouts come fewest pieces first and the first one that passes wins anyway: stop building more.
+          if (r.Brep != null && r.AllOk) break;
         }
         catch (Exception ex) { why += (why.Length > 0 ? "; " : "") + lay.Name + ": " + ex.Message; }
       }

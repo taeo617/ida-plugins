@@ -162,20 +162,52 @@ namespace NPatch
     {
       bool joint = seams.Count > 0;
       foreach (var s in seams) { ps[s.A].FreeSide(s.KA); ps[s.B].FreeSide(s.KB); }
+      // Two pieces, one seam: order A so the seam comes last and B so it comes first; the coupling then
+      // only links the end of A to the start of B and the joint system stays banded.
+      bool banded = !joint || BandedJoint && ps.Count == 2 && seams.Count == 1 && seams[0].A != seams[0].B;
+      var order = Enumerable.Range(0, ps.Count).ToList();
+      if (joint && banded)
+      {
+        var sa = ps[seams[0].A]; var sb = ps[seams[0].B];
+        sa.Order = Sys.OrderFor(seams[0].KA, true); sb.Order = Sys.OrderFor(seams[0].KB, false);
+        order = new List<int> { seams[0].A, seams[0].B };   // A's unknowns first, so the seam sits in the middle
+      }
       int N = 0;
-      foreach (var p in ps) { p.Off = N; N += p.Count; }
-      // One piece: banded. Joint: small enough to factor densely.
-      int bw = joint ? N - 1 : ps[0].Bandwidth;
+      foreach (int k in order) { ps[k].Off = N; N += ps[k].Count; }
+      int bw = !joint ? ps[0].Bandwidth
+             : banded ? Math.Max(ps.Max(p => p.Bandwidth), 3 * (3 * ps[0].Line + 3 * ps[1].Line + 1))
+             : N - 1;
       var srfs = new NurbsSurface[ps.Count];
       bool Run()
       {
         int passes = ps.Max(p => p.Passes);
+        // From the 2nd pass on only the G2 targets change: the factored matrix is kept and reused.
+        BandMatrix kept = null; int keptG2 = -1;
         for (int pass = 0; pass < passes; pass++)
         {
-          var M = new BandMatrix(N, bw);
-          var rhs = new double[N];
-          for (int k = 0; k < ps.Count; k++) ps[k].Assemble(srfs[k], M, rhs, N, joint);
-          foreach (var s in seams) Couple(ps[s.A], s.KA, ps[s.B], s.KB, s.Same, M, N);
+          BandMatrix M = null; double[] rhs = null;
+          if (kept != null)
+          {
+            rhs = new double[N];
+            int g2 = 0;
+            for (int k = 0; k < ps.Count; k++) g2 += ps[k].Assemble(srfs[k], null, rhs, N, joint);
+            if (g2 == keptG2) M = kept;
+          }
+          if (M == null)
+            while (true)
+            {
+              M = new BandMatrix(N, bw);
+              rhs = new double[N];
+              int g2 = 0;
+              for (int k = 0; k < ps.Count; k++) g2 += ps[k].Assemble(srfs[k], M, rhs, N, joint);
+              foreach (var s in seams) Couple(ps[s.A], s.KA, ps[s.B], s.KB, s.Same, M, N);
+              if (!M.Overflow || bw >= N - 1)
+              {
+                if (pass > 0 && NSidedFill.ReuseFactor) { kept = M; keptG2 = g2; }
+                break;
+              }
+              bw = N - 1;   // an entry fell outside the band: factor densely instead
+            }
           if (!M.Solve(rhs)) return false;
           for (int k = 0; k < ps.Count; k++) srfs[k] = ps[k].Make(rhs);
         }
@@ -192,6 +224,7 @@ namespace NPatch
       return srfs;
     }
 
+    internal static bool BandedJoint = true;
     internal static double CoupleC1 = 1e5, CoupleC2 = 1e2;
     internal static bool FreeSeam = true;
     internal static int SeamKeepEnd = 2;   // end position + direction stay on the cut; its bend there is free
@@ -266,8 +299,20 @@ namespace NPatch
       public int Off;
       public readonly HashSet<(int i, int j)> Coupled = new HashSet<(int i, int j)>();
       public int Count => NU * NV * 3;
-      public int Bandwidth => 3 * (P * NV + P + 1);
-      public int Idx(int i, int j, int c) => Off + (i * NV + j) * 3 + c;
+      /// <summary>Unknown ordering: 0 rows of i (natural), 1 rows of i reversed, 2 columns of j, 3 columns of j reversed.
+      /// A joint solve picks it so the shared side sits at the end of piece A and the start of piece B (narrow band).</summary>
+      public int Order;
+      public int Line => Order < 2 ? NV : NU;
+      public int Bandwidth => 3 * (P * Line + P + 1);
+      public int Idx(int i, int j, int c) => Off + 3 * (Order switch
+      {
+        0 => i * NV + j,
+        1 => (NU - 1 - i) * NV + j,
+        2 => j * NU + i,
+        _ => (NV - 1 - j) * NU + i,
+      }) + c;
+      /// <summary>Ordering that puts side k last (<paramref name="atEnd"/>) or first.</summary>
+      public static int OrderFor(int k, bool atEnd) => atEnd ? new[] { 3, 0, 2, 1 }[k] : new[] { 2, 1, 3, 0 }[k];
 
       public Point3d L(Point3d w) => new Point3d((w.X - O.X) / D, (w.Y - O.Y) / D, (w.Z - O.Z) / D);
       public Point3d W(Point3d l) => new Point3d(O.X + l.X * D, O.Y + l.Y * D, O.Z + l.Z * D);
@@ -528,8 +573,10 @@ namespace NPatch
       }
 
       /// <summary>Adds this piece's normal equations into the (joint) system. Joint: shared sides are left to the coupling.</summary>
-      public void Assemble(NurbsSurface prev, BandMatrix M, double[] rhs, int N, bool joint)
+      /// <summary>Adds this piece's rows; M == null builds only the right-hand side. Returns the number of G2 rows.</summary>
+      public int Assemble(NurbsSurface prev, BandMatrix M, double[] rhs, int N, bool joint)
       {
+        int g2Rows = 0;
         int p = P, nU = NU, nV = NV;
         var rowIdx = new int[3 * (p + 1) * (p + 1)];
         var rowVal = new double[rowIdx.Length];
@@ -540,7 +587,7 @@ namespace NPatch
             double wa = w * rowVal[a];
             int ia = rowIdx[a];
             rhs[ia] += wa * target;
-            for (int b = 0; b < count; b++) M.Add(ia, rowIdx[b], wa * rowVal[b]);
+            if (M != null) for (int b = 0; b < count; b++) M.Add(ia, rowIdx[b], wa * rowVal[b]);
           }
         }
         int FillRow(int su, double[,] Bu, int du, int sv, double[,] Bv, int dv, Vector3d? nrm, int c)
@@ -570,7 +617,7 @@ namespace NPatch
         var gu = GaussEnergy ? Quadrature(U, SpU) : Midpoints(3 * Math.Max(SpU, 2) + 3);
         var gv = GaussEnergy ? Quadrature(V, SpV) : Midpoints(3 * Math.Max(SpV, 2) + 3);
         double tm = 60 * Opt.Tautness * Opt.Tautness;
-        foreach (var (tu, au) in gu)
+        foreach (var (tu, au) in M == null ? new List<(double t, double w)>() : gu)   // zero targets: nothing for the right-hand side
           foreach (var (tv, av) in gv)
           {
             double area = Lu * Lv * au * av;
@@ -599,7 +646,7 @@ namespace NPatch
             var tgt = Pin[i, j] ?? coons[i, j];
             double w = Pin[i, j].HasValue ? wPin : wReg;
             double[] tc = { tgt.X, tgt.Y, tgt.Z };
-            for (int c = 0; c < 3; c++) { int ix = Idx(i, j, c); M.Add(ix, ix, w); rhs[ix] += w * tc[c]; }
+            for (int c = 0; c < 3; c++) { int ix = Idx(i, j, c); M?.Add(ix, ix, w); rhs[ix] += w * tc[c]; }
           }
 
         // c. Continuity rows across each border.
@@ -618,8 +665,10 @@ namespace NPatch
             var dc = k.crossV ? pd[1] : pd[0];   // world cross-boundary derivative
             int du2 = k.crossV ? 0 : 2, dv2 = k.crossV ? 2 : 0;
             AddRow(FillRow(su, Bu, du2, sv, Bv, dv2, k.nrm, 0), II(dc, dc) / D, Opt.CurvatureWeight * k.ramp);
+            g2Rows++;
           }
         }
+        return g2Rows;
       }
     }
 

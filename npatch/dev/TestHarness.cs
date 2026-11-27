@@ -217,6 +217,51 @@ namespace NPatch.Dev
       }
     }
 
+    /// <summary>Timing of full solves on n-gon holes in a sphere and a wave (adds nothing to the doc).</summary>
+    public static string ProfileLog = @"C:\Users\User\Documents\Rhino Agent\NPatch\dev\profile.log";
+    public static bool[] ProfileVariants = { true };
+    public static void Profile(RhinoDoc doc, StringBuilder output)
+    {
+      System.IO.File.AppendAllText(ProfileLog, "---- " + DateTime.Now.ToString("s") + System.Environment.NewLine);
+      double tol = doc?.ModelAbsoluteTolerance ?? 0.001;
+      Func<double, double, double> wave = (x, y) => 2.0 * Math.Sin(x * 0.25) * Math.Cos(y * 0.2) + 0.03 * x * y;
+      var pts = new List<Point3d>();
+      for (int i = 0; i <= 30; i++) for (int j = 0; j <= 30; j++) { double x = -15 + i, y = -15 + j; pts.Add(new Point3d(x, y, wave(x, y))); }
+      var waveB = NurbsSurface.CreateThroughPoints(pts, 31, 31, 3, 3, false, false).ToBrep();
+      var sph = new Sphere(Point3d.Origin, 10).ToBrep();
+      foreach (bool sphere in new[] { true, false })
+        foreach (int n in new[] { 3, 4, 5, 6 })
+        {
+          double cx = sphere ? 0 : 1.5, cy = sphere ? 0 : -1;
+          var holed = sphere ? Holed(sph, 5.5, cx, cy, n, 0.3, tol) : Holed(waveB, 6.5, cx, cy, n, 0.3, tol);
+          if (holed == null) { output.AppendLine($"{(sphere ? "sphere" : "wave")} n{n}: no hole"); continue; }
+          foreach (int g in new[] { 1, 2 })
+          {
+            var inputs = new List<BoundaryInput>();
+            foreach (var e in holed.Edges)
+            {
+              var mp = e.PointAtNormalizedLength(0.5);
+              if (e.Valence == EdgeAdjacency.Naked && new Point3d(mp.X, mp.Y, 0).DistanceTo(new Point3d(cx, cy, 0)) < 9)
+                inputs.Add(new BoundaryInput { Curve = e.DuplicateCurve(), AdjacentFace = holed.Faces[e.AdjacentFaces()[0]], Continuity = (Continuity)g });
+            }
+            foreach (bool newWay in ProfileVariants)
+            {
+              QuadFill.BandedJoint = newWay; NSidedFill.ReuseFactor = newWay;
+              Prof.Reset();
+              var sw = System.Diagnostics.Stopwatch.StartNew();
+              var r = NSidedFill.Solve(inputs, new FillOptions { Degree = Degree }, tol);
+              sw.Stop();
+              string kind = r.Brep == null ? "FAIL" : !r.Untrimmed ? "trim" : r.Surfaces.Count > 1 ? "split" + r.Surfaces.Count : "quad";
+              double worst = r.Edges.Count == 0 ? 0 : NSidedFill.Badness(r, new FillOptions(), tol);
+              var line = $"{(sphere ? "sphere" : "wave  ")} n{n} G{g} {(newWay ? "new" : "old")}: {sw.ElapsedMilliseconds,6} ms  {kind,-6} spans {r.SpanCount,2} allOk {r.AllOk,-5} bad {worst:F2} | {Prof.Text()}";
+              output.AppendLine(line);
+              System.IO.File.AppendAllText(ProfileLog, line + System.Environment.NewLine);
+            }
+            QuadFill.BandedJoint = true; NSidedFill.ReuseFactor = true;
+          }
+        }
+    }
+
     public static void Run(RhinoDoc doc, StringBuilder output)
     {
       var holedObj = doc.Objects.FindByLayer("Test_Holed").FirstOrDefault();

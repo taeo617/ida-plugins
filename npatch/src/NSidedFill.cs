@@ -134,6 +134,7 @@ namespace NPatch
   {
     /// <summary>Max spans the adaptive refinement will go to.</summary>
     public const int MaxSpans = 28;
+    internal static bool ReuseFactor = true;
     internal const double CornerFraction = 0.12; // first/last 12% of each edge counts as "corner"
 
     public static FillResult Solve(IList<BoundaryInput> inputs, FillOptions opt, double tol)
@@ -289,6 +290,7 @@ namespace NPatch
 
     static FillResult SolveOnce(IList<BoundaryInput> inputs, FillOptions opt, double tol)
     {
+      Prof.Trimmed++;
       var res = new FillResult { SpanCount = opt.SpanCount, Degree = opt.Degree };
       if (inputs == null || inputs.Count == 0) { res.Message = "No boundary curves."; return res; }
 
@@ -351,9 +353,11 @@ namespace NPatch
       bool anyG2 = samples.Any(s => s.C == Continuity.G2);
       int passes = anyG2 ? 1 + Math.Max(1, opt.CurvatureIterations) : 1;
       NurbsSurface srf = null;
+      // From the 2nd pass on only the G2 targets change, so the factored matrix is kept and reused.
+      BandMatrix kept = null; int keptG2 = -1;
       for (int pass = 0; pass < passes; pass++)
       {
-        var sol = Assemble(srf);
+        var sol = Assemble(srf, kept != null) ?? (kept != null ? Assemble(srf, false) : null);
         if (sol == null) { res.Message = "Solver failed (matrix not positive definite)."; return res; }
         srf = NurbsSurface.Create(3, false, p_ + 1, p_ + 1, nU, nV);
         for (int k = 1; k < U.Length - 1; k++) srf.KnotsU[k - 1] = U[k];
@@ -381,11 +385,13 @@ namespace NPatch
 
       // Builds and solves the least-squares system. `prev` (world-space surface) linearises the
       // G2 rows; null on the first pass.
-      double[] Assemble(NurbsSurface prev)
+      // rhsOnly: reuse `kept` and only build the right-hand side; null if the G2 rows differ from it.
+      double[] Assemble(NurbsSurface prev, bool rhsOnly)
       {
         int N = nU * nV * 3;
         int bw = 3 * (p_ * nV + p_ + 1); // half bandwidth of M with this unknown ordering
-        var M = new BandMatrix(N, bw);
+        var M = rhsOnly ? kept : new BandMatrix(N, bw);
+        int g2Rows = 0;
         var rhs = new double[N];
         var rowIdx = new int[3 * (p_ + 1) * (p_ + 1)];
         var rowVal = new double[rowIdx.Length];
@@ -396,7 +402,7 @@ namespace NPatch
             double wa = w * rowVal[a];
             int ia = rowIdx[a];
             rhs[ia] += wa * target;
-            for (int b = 0; b < count; b++) M.Add(ia, rowIdx[b], wa * rowVal[b]);
+            if (!rhsOnly) for (int b = 0; b < count; b++) M.Add(ia, rowIdx[b], wa * rowVal[b]);
           }
         }
         // Row = sum_ab Bu[du,a] Bv[dv,b] * (n . P_ab) when n != null, else component c only.
@@ -420,7 +426,7 @@ namespace NPatch
         double wE = ax * ay / (Gu * Gv);
         double wM = wE * 60 * opt.Tautness * opt.Tautness;
         double a2 = ax * ax, b2 = ay * ay;
-        for (int gi = 0; gi < Gu; gi++)
+        for (int gi = 0; gi < (rhsOnly ? 0 : Gu); gi++)   // zero targets: nothing for the right-hand side
           for (int gj = 0; gj < Gv; gj++)
           {
             Basis(U, nU, p_, (gi + 0.5) / Gu, 2, out int su, out double[,] Bu);
@@ -446,7 +452,7 @@ namespace NPatch
           for (int j = 0; j < nV; j++)
           {
             double[] tgt = { grevU[i] * ax, grevV[j] * ay, 0 };
-            for (int c = 0; c < 3; c++) { int ix = Idx(i, j, c); M.Add(ix, ix, wReg); rhs[ix] += wReg * tgt[c]; }
+            for (int c = 0; c < 3; c++) { int ix = Idx(i, j, c); if (!rhsOnly) M.Add(ix, ix, wReg); rhs[ix] += wReg * tgt[c]; }
           }
 
         // c. Boundary constraints.
@@ -474,6 +480,7 @@ namespace NPatch
             double wk = opt.CurvatureWeight * CornerRamp(s.F);
             if (wk > 0)
             {
+              g2Rows++;
               AddRow(FillRow(su, Bu, 2, sv, Bv, 0, nl, 0), II(pd[0], pd[0]) / D, wk);
               AddRow(FillRow(su, Bu, 1, sv, Bv, 1, nl, 0), II(pd[0], pd[1]) / D, wk);
               AddRow(FillRow(su, Bu, 0, sv, Bv, 2, nl, 0), II(pd[1], pd[1]) / D, wk);
@@ -493,7 +500,10 @@ namespace NPatch
           AddRow(FillRow(su, Bu, 0, sv, Bv, 0, null, 2), qc[2], opt.PositionWeight);
         }
 
-        return M.Solve(rhs) ? rhs : null;
+        if (rhsOnly && g2Rows != keptG2) return null;
+        if (!M.Solve(rhs)) return null;
+        if (!rhsOnly && prev != null && ReuseFactor) { kept = M; keptG2 = g2Rows; }
+        return rhs;
       }
     }
 
@@ -503,6 +513,12 @@ namespace NPatch
 
     /// <summary>Per-edge report against several surfaces: each sample is measured on the nearest one.</summary>
     internal static void BuildReport(FillResult res, IList<BoundaryInput> inputs, List<Sample> samples, IList<NurbsSurface> srfs, double size, FillOptions opt, double tol)
+    {
+      Prof.Report.Start();
+      try { BuildReportCore(res, inputs, samples, srfs, size, opt, tol); } finally { Prof.Report.Stop(); }
+    }
+
+    static void BuildReportCore(FillResult res, IList<BoundaryInput> inputs, List<Sample> samples, IList<NurbsSurface> srfs, double size, FillOptions opt, double tol)
     {
       NurbsSurface srf = srfs[0];
       bool Nearest(Point3d pt, out double u, out double v)
@@ -595,6 +611,12 @@ namespace NPatch
     }
 
     static Brep TrimToLoop(Brep brep, Curve loop, Plane plane, double tol)
+    {
+      Prof.Trim.Start();
+      try { return TrimToLoopCore(brep, loop, plane, tol); } finally { Prof.Trim.Stop(); }
+    }
+
+    static Brep TrimToLoopCore(Brep brep, Curve loop, Plane plane, double tol)
     {
       var face = brep.Faces[0];
       var pulled = loop.PullToBrepFace(face, tol);
