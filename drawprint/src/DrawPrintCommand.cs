@@ -126,7 +126,8 @@ namespace IDA.DrawPrint
                 { "bbox", bbox.Select(x => (object)x).ToList() }, { "items", items }, { "texts", texts },
                 { "save_path", aiPath.Replace("\\", "/") }, { "created", DateTime.Now.ToString("s") },
             };
-            string dataDir = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments), "drawprint");
+            // 일러스트로 넘기는 작업 파일 — 사용자 문서 폴더가 아니라 임시 폴더에 둠
+            string dataDir = Path.Combine(Path.GetTempPath(), "drawprint");
             Directory.CreateDirectory(dataDir);
             string dataPath = Path.Combine(dataDir, "last_export.json");
             File.WriteAllText(dataPath, MiniJson.Write(data), new UTF8Encoding(false));

@@ -58,10 +58,10 @@
       "id": "drawprint",
       "title": "drawprint · 인쇄 데이터 (AI 1:1)",
       "description": "선택한 객체를 FOUNDFOUNDED 인쇄 데이터 규칙으로 일러스트 AI(mm 1:1, CMYK)로 저장해요. 레이어는 인쇄(면)·가이드(치수)·도면(외곽선)·배경색, 솔리드는 인쇄면 외곽을 실측해요. 파일 이름은 '프로젝트명_인쇄 데이터_FOUNDFOUNDED.ai'. 전달용이에요(검토용 A4 도면은 a4draw).",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "command": "DrawPrint",
       "required": true,
-      "file": "dist/drawprint-1.0.1-rh8_0-win.yak"
+      "file": "dist/drawprint-1.0.2-rh8_0-win.yak"
     }
   ]
 }
