@@ -27,5 +27,19 @@
       "aeea5a9f1e5a3ba7a85a84378f18bacb4e0876ccdccbc6748a992978dd3bc2e7"
     ],
     "contact": "관리자에게 로그인한 이메일 주소를 알려 주세요."
-  }
+  },
+  "examples": [
+    {
+      "name": "필렛제거 예시.3dm",
+      "title": "필렛 제거 예시 (STL 넙스 변환 포함)",
+      "file": "examples/필렛제거 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "엑스넙스 플러그인 개발.3dm",
+      "title": "엑스넙스 플러그인 예시",
+      "file": "examples/엑스넙스 플러그인 개발.3dm",
+      "version": "1"
+    }
+  ]
 }
