@@ -90,8 +90,9 @@ namespace IDA.A4Draw
                         var ds = ab.DimensionStyleId != Guid.Empty ? doc.DimStyles.FindId(ab.DimensionStyleId) : null;
                         foreach (var part in ab.Explode() ?? new GeometryBase[0])
                         {
-                            if (part is TextEntity tte) G(ln).Texts.Append(TextTag(tte, Map, u));
-                            else if (part is Curve pc)
+                            // 분해 결과에 글자가 섞여 나올 때가 있음 → 버리고 DimText 하나만 씀 (겹침 방지)
+                            if (part is TextEntity) continue;
+                            if (part is Curve pc)
                             {
                                 bool arrow = pc.IsClosed && pc.GetBoundingBox(true).Diagonal.Length < 6 * u;
                                 (arrow ? G(ln).Fills : G(ln).Paths).Append(PathTag(pc, Map, arrow));
@@ -104,6 +105,9 @@ namespace IDA.A4Draw
                     case TextEntity te:
                         G(ln).Texts.Append(TextTag(te, Map, u));
                         break;
+                    case Hatch hz:
+                        G(ln).Fills.Append(HatchTag(hz, Map));
+                        break;
                 }
             }
 
@@ -112,7 +116,7 @@ namespace IDA.A4Draw
             sb.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{F(pw)}mm\" height=\"{F(ph)}mm\" viewBox=\"0 0 {F(pw)} {F(ph)}\">");
             sb.AppendLine("  <!-- found/Founded A4 도면 · 1 단위 = 1mm · 선 두께는 출력 기준 mm -->");
             // 아래 레이어부터: 도곽 → 그림 → 치수 → 글자
-            string[] order = { "도곽", "숨은선", "탄젠트선", "외형선", "치수", "글자" };
+            string[] order = { "도곽", "표제란", "로고", "표제란 글자", "표제란 보조", "숨은선", "탄젠트선", "외형선", "치수", "글자" };
             foreach (var ln in order.Concat(groups.Keys.Except(order)))
             {
                 if (!groups.TryGetValue(ln, out var s)) continue;
@@ -120,7 +124,8 @@ namespace IDA.A4Draw
                 var li = doc.Layers.FindByFullPath(Page.Root + "::" + ln, -1);
                 double w = li >= 0 && doc.Layers[li].PlotWeight > 0 ? doc.Layers[li].PlotWeight : (spec.Name != null ? spec.Weight : 0.25);
                 var col = li >= 0 ? doc.Layers[li].PlotColor : System.Drawing.Color.Black;
-                if (col.A == 0 || col.ToArgb() == System.Drawing.Color.White.ToArgb()) col = System.Drawing.Color.Black;
+                if (spec.Name != null && Page.IsWhite(spec.Color)) col = System.Drawing.Color.White;   // 검은 띠 위 흰 로고·글자
+                else if (col.A == 0 || Page.IsWhite(col)) col = System.Drawing.Color.Black;
                 string hex = $"#{col.R:X2}{col.G:X2}{col.B:X2}";
                 string dash = spec.Dashed ? " stroke-dasharray=\"1.5 0.8\"" : "";
                 sb.AppendLine($"  <g id=\"{ln}\" fill=\"none\" stroke=\"{hex}\" stroke-width=\"{F(w)}\" stroke-linecap=\"round\" stroke-linejoin=\"round\"{dash}>");
@@ -133,7 +138,16 @@ namespace IDA.A4Draw
             return sb.ToString();
         }
 
-        static string PathTag(Curve c, Func<Point3d, Point2d> map, bool fill)
+        static string PathTag(Curve c, Func<Point3d, Point2d> map, bool fill) => $"    <path d=\"{PathD(c, map)}\"/>\n";
+
+        // 해치(면): 바깥 + 안쪽(구멍) 경계를 한 경로로, 짝홀 규칙으로 구멍 뚫기
+        static string HatchTag(Hatch h, Func<Point3d, Point2d> map)
+        {
+            var d = string.Join(" ", h.Get3dCurves(true).Concat(h.Get3dCurves(false)).Select(c => PathD(c, map)));
+            return d.Length == 0 ? "" : $"    <path fill-rule=\"evenodd\" d=\"{d}\"/>\n";
+        }
+
+        static string PathD(Curve c, Func<Point3d, Point2d> map)
         {
             var d = new StringBuilder();
             void M(Point3d p) { var q = map(p); d.Append("M").Append(F(q.X)).Append(' ').Append(F(q.Y)); }
@@ -160,7 +174,7 @@ namespace IDA.A4Draw
                 }
             }
             if (c.IsClosed) d.Append(" Z");
-            return $"    <path d=\"{d}\"/>\n";
+            return d.ToString();
         }
 
         // 치수 숫자: 분해하면 글자가 빠지므로 값·위치를 직접 읽어 편집 가능한 <text>로
@@ -186,11 +200,11 @@ namespace IDA.A4Draw
             }
             if (xa.X < -1e-6 || (Math.Abs(xa.X) < 1e-6 && xa.Y < 0)) xa = -xa; // 거꾸로 읽히지 않게 (아래→위, 왼→오)
             var ya = Vector3d.CrossProduct(Vector3d.ZAxis, xa);
-            // 선형 치수: TextPosition은 치수선 위 → 글자 간격만큼 띄움. 지름 치수: 지시선 끝 가운데
-            // 선형 치수: TextPosition은 치수선 위 → 글자 간격만큼 띄움. 지름 치수: 지시선 끝 오른쪽에 왼쪽 정렬
+            // 선형 치수: TextPosition은 치수선 위 → 글자 간격만큼 띄움.
+            // 지름 치수: 지시선 꺾인 곳(가로 선) 위에 올려 선이 글자를 가로지르지 않게
             bool radial = dm is RadialDimension;
             double gap = ds.TextGap > 0 ? ds.TextGap : 0.8 * u;
-            var basePt = radial ? c + xa * (leftSide ? -gap : gap) - ya * (h / 2) * u : c + ya * gap;
+            var basePt = radial ? c + ya * gap + xa * (leftSide ? -0.5 * gap : 0.5 * gap) : c + ya * gap;
             var q = map(basePt);
             double ang = -Math.Atan2(xa.Y, xa.X) * 180 / Math.PI;
             string rot = Math.Abs(ang) > 0.01 ? $" transform=\"rotate({F(ang)} {F(q.X)} {F(q.Y)})\"" : "";
@@ -250,7 +264,8 @@ namespace IDA.A4Draw
     var gs = [];
     for (var i = 0; i < base.groupItems.length; i++) gs.push(base.groupItems[i]);
     if (gs.length == 1 && gs[0].groupItems.length > 1 && gs[0].name == '') { var w0 = gs[0]; gs = []; for (var i = 0; i < w0.groupItems.length; i++) gs.push(w0.groupItems[i]); }
-    for (var i = 0; i < gs.length; i++) {
+    // gs[0] = 맨 위 그룹. 새 레이어는 항상 맨 위에 생기므로 맨 아래 그룹부터 만들어 쌓임 순서 유지 (검은 띠가 로고·글자를 덮지 않게)
+    for (var i = gs.length - 1; i >= 0; i--) {
       var g = gs[i]; var L = doc.layers.add(); L.name = g.name || ('레이어 ' + (i + 1));
       g.move(L, ElementPlacement.PLACEATBEGINNING);
     }

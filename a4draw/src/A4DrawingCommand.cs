@@ -107,7 +107,7 @@ namespace IDA.A4Draw
             bool portrait = hMm > wMm * 1.15;
             double PW = portrait ? 210 : 297, PH = portrait ? 297 : 210;
             const double M = 10;                 // 도곽 여백
-            const double TB_W = 100, TB_H = 22;  // 표제란
+            const double TB_H = 18;              // 하단 띠 표제란 높이
             // 그림 영역: 도곽 안, 표제란 위, 치수 자리(아래·오른쪽 22mm, 위·왼쪽 10mm)
             double areaX0 = M + 12, areaX1 = PW - M - 24, areaY0 = M + TB_H + 22, areaY1 = PH - M - 12;
             double s = ScaleValues[scaleIx] > 0 ? ScaleValues[scaleIx] : Page.FitScale(wMm, hMm, areaX1 - areaX0, areaY1 - areaY0);
@@ -130,6 +130,7 @@ namespace IDA.A4Draw
                     case LinearDimension ld: id = doc.Objects.AddLinearDimension(ld, a); break;
                     case RadialDimension rd: id = doc.Objects.AddRadialDimension(rd, a); break;
                     case TextEntity te: id = doc.Objects.AddText(te, a); break;
+                    case Hatch ht: id = doc.Objects.AddHatch(ht, a); break;
                 }
                 if (id != Guid.Empty) added.Add(id);
                 return id;
@@ -201,23 +202,49 @@ namespace IDA.A4Draw
 
             // 5) 뷰 이름 + 표제란
             var tstyle = ds;
-            void Text(string t, double x, double y, double hMmTxt, TextJustification j)
+            void Text(string t, double x, double y, double hMmTxt, TextJustification j, string layer = "글자")
             {
                 var te = TextEntity.Create(t, new Plane(P(x, y), Vector3d.XAxis, Vector3d.YAxis), tstyle, false, 0, 0);
                 if (te == null) return;
                 te.TextHeight = hMmTxt * u;
                 te.Justification = j;
                 te.DimensionStyleId = tstyle.Id;
-                Add(te, "글자");
+                Add(te, layer);
             }
             Text($"{ViewKo[view]}  {Page.ScaleText(s)}", (gbb.Center.X - O.X) / u, (gbb.Min.Y - O.Y) / u - 24, 3, TextJustification.BottomCenter);
-            double tx = PW - M - TB_W, ty = M;
-            Add(new Rectangle3d(new Plane(P(tx, ty), Vector3d.XAxis, Vector3d.YAxis), TB_W * u, TB_H * u).ToNurbsCurve(), "도곽");
-            Add(new LineCurve(P(tx, ty + 12), P(tx + TB_W, ty + 12)), "치수");
-            Add(new LineCurve(P(tx + 50, ty), P(tx + 50, ty + 12)), "치수");
-            Text(name, tx + 4, ty + 15, 4, TextJustification.BottomLeft);
-            Text($"축척 {Page.ScaleText(s)} · 단위 mm", tx + 4, ty + 4.5, 2.5, TextJustification.BottomLeft);
-            Text($"{ViewKo[view]} · {DateTime.Now:yyyy.MM.dd}", tx + 54, ty + 4.5, 2.5, TextJustification.BottomLeft);
+
+            // 하단 띠 표제란 (found/Founded): 도곽 안 아래쪽 전체 폭 검은 띠 + 흰 로고 + 칸마다 이름(회색)·값(흰색)
+            double bx0 = M, bx1 = PW - M, by0 = M, by1 = M + TB_H;
+            int solid = Page.SolidPattern(doc);
+            var band = new Rectangle3d(new Plane(P(bx0, by0), Vector3d.XAxis, Vector3d.YAxis), (bx1 - bx0) * u, TB_H * u).ToNurbsCurve();
+            var bandHatch = Hatch.Create(band, solid, 0, 1, doc.ModelAbsoluteTolerance);
+            if (bandHatch != null && bandHatch.Length > 0)
+            {
+                var ba = Page.Attrs(doc, "표제란", pageId); ba.DisplayOrder = -1;
+                Add(bandHatch[0], "표제란", ba);
+            }
+            double logoH = portrait ? 3.6 : 4.4;                  // 로고 글자 높이(mm)
+            double lx = bx0 + 6, ly = by0 + (TB_H - logoH) / 2;
+            foreach (var letter in Page.LogoCurves(P(lx, ly).X, P(lx, ly).Y, logoH * u))
+            {
+                var hs = Hatch.Create(letter, solid, 0, 1, doc.ModelAbsoluteTolerance * 0.1);
+                if (hs == null) continue;
+                foreach (var h in hs) Add(h, "로고");
+            }
+            // 칸: 도면명 · 축척 · 날짜 · 도면번호 · 시트 (가로 비율로 나눔)
+            double fx0 = lx + Logo.Width * logoH + 8;
+            string[] labels = { "도면명", "축척 · 단위", "날짜", "도면번호", "시트" };
+            string[] values = { $"{name} · {ViewKo[view]}", $"{Page.ScaleText(s)} · mm", DateTime.Now.ToString("yyyy.MM.dd"), "FD-" + DateTime.Now.ToString("yyMMdd"), "1 / 1" };
+            double[] wts = { 2.2, 1.1, 1.2, 1.1, 0.7 };
+            double span = bx1 - 4 - fx0, sum = wts.Sum(), fx = fx0;
+            double valH = portrait ? 2.8 : 3.2, labH = 1.8;
+            for (int f = 0; f < labels.Length; f++)
+            {
+                Add(new LineCurve(P(fx, by0 + 3.5), P(fx, by1 - 3.5)), "표제란 글자");
+                Text(labels[f], fx + 2.5, by1 - 4.2 - labH, labH, TextJustification.BottomLeft, "표제란 보조");
+                Text(values[f], fx + 2.5, by0 + 4, valH, TextJustification.BottomLeft, "표제란 글자");
+                fx += span * wts[f] / sum;
+            }
 
             if (added.Count > 0)
             {

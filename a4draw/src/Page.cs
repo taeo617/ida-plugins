@@ -26,7 +26,59 @@ namespace IDA.A4Draw
             ("글자", 0.18, Color.Black, false),
             ("도곽", 0.50, Color.Black, false),
             ("용지", 0.05, Color.FromArgb(190, 190, 190), false),
+            // 하단 띠 표제란: 검은 띠(면) 위에 흰 로고·흰 글자
+            ("표제란", 0.0, Color.Black, false),
+            ("로고", 0.0, Color.White, false),
+            ("표제란 글자", 0.13, Color.White, false),
+            ("표제란 보조", 0.13, Color.FromArgb(170, 170, 170), false),
         };
+
+        public static bool IsWhite(Color c) => c.R == 255 && c.G == 255 && c.B == 255;
+
+        // 로고 윤곽선 (Logo.Paths) → 문서 좌표 닫힌 곡선들. (x0, y0) = 로고 왼쪽 아래, h = 높이(문서 단위)
+        public static List<List<Curve>> LogoCurves(double x0, double y0, double h)
+        {
+            var letters = new List<List<Curve>>();
+            Point3d Pt(double x, double y) => new Point3d(x0 + x * h, y0 + (1 - y) * h, 0);
+            foreach (var d in Logo.Paths)
+            {
+                var loops = new List<Curve>();
+                var t = System.Text.RegularExpressions.Regex.Matches(d, "[MCLZ]|-?[0-9.]+").Cast<System.Text.RegularExpressions.Match>().Select(m => m.Value).ToList();
+                int i = 0; PolyCurve pc = null; Point3d cur = Point3d.Origin, start = cur;
+                double N() => double.Parse(t[i++], System.Globalization.CultureInfo.InvariantCulture);
+                while (i < t.Count)
+                {
+                    string c = t[i++];
+                    if (c == "M") { pc = new PolyCurve(); cur = start = Pt(N(), N()); }
+                    else if (c == "L") { var p = Pt(N(), N()); if (p.DistanceTo(cur) > 1e-9) pc.Append(new LineCurve(cur, p)); cur = p; }
+                    else if (c == "C")
+                    {
+                        var p1 = Pt(N(), N()); var p2 = Pt(N(), N()); var p3 = Pt(N(), N());
+                        if (p3.DistanceTo(cur) > 1e-9 || p1.DistanceTo(cur) > 1e-9)
+                        {
+                            bool straight = p1.DistanceTo(cur) < 1e-9 && p2.DistanceTo(p3) < 1e-9;
+                            pc.Append(straight ? (Curve)new LineCurve(cur, p3) : new BezierCurve(new[] { cur, p1, p2, p3 }).ToNurbsCurve());
+                        }
+                        cur = p3;
+                    }
+                    else if (c == "Z")
+                    {
+                        if (cur.DistanceTo(start) > 1e-9) pc.Append(new LineCurve(cur, start));
+                        if (pc.SegmentCount > 0) { pc.RemoveNesting(); loops.Add(pc); }
+                        cur = start;
+                    }
+                }
+                if (loops.Count > 0) letters.Add(loops);
+            }
+            return letters;
+        }
+
+        public static int SolidPattern(RhinoDoc doc)
+        {
+            var hp = doc.HatchPatterns.FindName("Solid");
+            if (hp != null) return hp.Index;
+            return doc.HatchPatterns.Add(HatchPattern.Defaults.Solid);
+        }
 
         public static int Layer(RhinoDoc doc, string name)
         {
