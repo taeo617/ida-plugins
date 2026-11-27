@@ -35,6 +35,56 @@
       "command": "Bambu",
       "required": true,
       "file": "dist/bambu-1.0.1-rh8_0-win.yak"
+    },
+    {
+      "id": "byRhinoGadget",
+      "title": "byRhinoGadget · 모델링 편의 명령 (무료)",
+      "description": "필렛·둥근 사각형·G3 매칭·버튼/양각·무게 계산·분해도 등 Rhino 명령 80여 개. 사용법: ida-plugins/free-plugins.md",
+      "version": "1.6.4",
+      "command": "FilletCornerCutting, RoundedRectangleSmooth, MatchSrfG3, mkButtonsDome, WeightSolid …",
+      "required": false,
+      "source": "yak",
+      "url": "https://files.mcneel.com/yak/packages/byRhinoGadget-1.6.4-rh8_14-any.yak"
+    },
+    {
+      "id": "Parakeet",
+      "title": "Parakeet · 패턴 생성 (무료)",
+      "description": "Grasshopper 패턴 생성: 타일링·벽돌·헤링본·에셔·균열·잎맥·꽃무늬. 사용법: ida-plugins/free-plugins.md",
+      "version": "1.2.0",
+      "command": "Grasshopper › Parakeet 탭",
+      "required": false,
+      "source": "yak",
+      "url": "https://files.mcneel.com/yak/packages/Parakeet-1.2.0-rh7_36-any.yak"
+    },
+    {
+      "id": "LunchBox",
+      "title": "LunchBox · 곡면 패널링 (무료)",
+      "description": "Grasshopper로 곡면을 다이아몬드·육각·삼각·사각 패널로 나누기, Shell, Quad Remesh. 사용법: ida-plugins/free-plugins.md",
+      "version": "2025.5.5.0",
+      "command": "Grasshopper › LunchBox 탭",
+      "required": false,
+      "source": "yak",
+      "url": "https://files.mcneel.com/yak/packages/LunchBox-2025.5.5.0-rh8_12-any.yak"
+    },
+    {
+      "id": "Pufferfish",
+      "title": "Pufferfish · 트윈·블렌드 (무료)",
+      "description": "Grasshopper로 두 커브·서피스·SubD 사이 중간 형태, 평균, 대칭, 면적·부피 맞춤. 사용법: ida-plugins/free-plugins.md",
+      "version": "3.0.0",
+      "command": "Grasshopper › Pufferfish 탭",
+      "required": false,
+      "source": "yak",
+      "url": "https://files.mcneel.com/yak/packages/Pufferfish-3.0.0-rh8_0-any.yak"
+    },
+    {
+      "id": "SnappingGecko",
+      "title": "SnappingGecko · 캔버스 스냅 (무료)",
+      "description": "Grasshopper 컴포넌트를 가장자리·가운데·연결선에 맞춰 정렬. 사용법: ida-plugins/free-plugins.md",
+      "version": "1.1.2",
+      "command": "Grasshopper 메뉴 › SnappingGecko",
+      "required": false,
+      "source": "yak",
+      "url": "https://files.mcneel.com/yak/packages/SnappingGecko-1.1.2-rh7_0-any.yak"
     }
   ]
 }
