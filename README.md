@@ -11,20 +11,6 @@ found/Founded 팀이 쓰는 Rhino 8 플러그인 모음이에요. 산업디자�
 | ida-connect | `IdaConnect` | Rhino가 켜질 때 RhinoMCP(mcpstart)를 자동으로 켜서 에이전트와 연결 (`IdaConnect`에서 AutoConnect On/Off) |
 | bambu | `Bambu` | 선택한 객체를 서포트가 가장 적은 방향으로 눕히고, 뱀부랩 X2D 판보다 크면 나누고(맞춤 핀 구멍), 판별로 배치해 STL로 내보내기 |
 
-## 무료 공개 플러그인 (Yak)
-
-`plugins.json`에는 팀 플러그인 말고도 Rhino 공식 저장소(Yak)의 무료 플러그인이 들어 있어요 (`"source": "yak"`, `"required": false`). 파일은 이 저장소에 두지 않고 `url`로 McNeel 서버에서 바로 받아요.
-
-| 이름 | 어디에 | 하는 일 |
-|---|---|---|
-| byRhinoGadget | Rhino 명령어 | 모델링 편의 명령 80여 개 |
-| Parakeet | Grasshopper | 패턴 생성 |
-| LunchBox | Grasshopper | 곡면 패널링 |
-| Pufferfish | Grasshopper | 트윈·블렌드 |
-| SnappingGecko | Grasshopper | 캔버스 스냅 |
-
-사용법은 [free-plugins.md](free-plugins.md)에 있어요. 버전을 올릴 때는 `Yak.exe search --all <이름>`으로 Rhino 8용 배포가 있는지 먼저 확인하세요 (LunchBox 2026.x는 Rhino 8용 배포가 없어서 2025.5.5.0에 고정).
-
 ## 폴더 구조
 
 ```
