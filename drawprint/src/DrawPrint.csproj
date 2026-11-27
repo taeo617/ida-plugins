@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>drawprint</AssemblyName>
+    <RootNamespace>IDA.DrawPrint</RootNamespace>
+    <TargetExt>.rhp</TargetExt>
+    <Version>1.0.0</Version>
+    <Title>drawprint</Title>
+    <Description>선택한 객체를 FOUNDFOUNDED 인쇄 데이터 규칙(인쇄·가이드·도면·배경색 레이어, CMYK, mm 1:1)으로 일러스트 AI 저장</Description>
+    <Company>found/Founded</Company>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Rhino 8.0 SDK 기준 → Rhino 8 아무 버전에서나 설치됨 -->
+    <PackageReference Include="RhinoCommon" Version="8.0.23304.9001" ExcludeAssets="runtime" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 일러스트 빌더와 규칙(샘플 9개 분석)은 rhino-ai-print 스킬에서 검증한 것 그대로 -->
+    <EmbeddedResource Include="ai_build.jsx" LogicalName="ai_build.jsx" />
+    <EmbeddedResource Include="config.json" LogicalName="config.json" />
+  </ItemGroup>
+</Project>

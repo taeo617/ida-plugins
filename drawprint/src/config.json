@@ -1,0 +1,50 @@
+{
+  "_comment": "Rhino -> Illustrator 인쇄 데이터 규칙 (FOUNDFOUNDED 인쇄 데이터 9종 분석 기반)",
+
+  "file_suffix": "_인쇄 데이터_FOUNDFOUNDED",
+
+  "ai_layers": [
+    {"name": "인쇄",   "mode": "fill",   "layer_color": [255, 79, 79],  "always": true,
+     "keywords": ["인쇄", "print", "fill", "채색", "로고", "logo"]},
+    {"name": "가이드", "mode": "stroke", "layer_color": [79, 128, 255], "always": true, "stroke_pt": 0.3,
+     "keywords": ["가이드", "guide", "치수", "dim", "설명", "text", "주석"]},
+    {"name": "도면",   "mode": "stroke", "layer_color": [79, 255, 79],  "always": true, "stroke_pt": 0.5,
+     "_fixed_cmyk": "샘플 9개 모두 도면은 검정 계열 -> Rhino 표시색 무시하고 고정",
+     "fixed_cmyk": [93, 88, 89, 80],
+     "keywords": ["도면", "외곽", "칼선", "커팅", "타공", "cut", "outline", "라인"]},
+    {"name": "배경색", "mode": "fill",   "layer_color": [254, 254, 0],  "always": false,
+     "keywords": ["배경", "background", "bg", "바탕"]}
+  ],
+
+  "_view": "auto = 평면 커브 방향으로 자동(top/front/right), 없으면 활성 평행뷰, 그래도 없으면 top. 직접 지정: top/front/back/right/left/bottom",
+  "view": "auto",
+
+  "_make2d": "true = 솔리드/메쉬는 보는 방향으로 Make2D(숨은선 제거)해서 외곽선 추출",
+  "make2d": true,
+
+  "_unmatched": "auto = 닫힌 커브는 '인쇄'(면), 열린 커브는 '도면'(선). keep = Rhino 레이어 이름 그대로 별도 AI 레이어",
+  "unmatched": "auto",
+
+  "_skip_layers": "이 단어가 Rhino 레이어 경로에 들어가면 내보내지 않음",
+  "skip_layers": ["Hidden", "숨은선"],
+
+  "_black": "Rhino 검정(0,0,0) 변환값. K100 = [0,0,0,100], rich = [93,88,89,80]",
+  "black_fill": [0, 0, 0, 100],
+  "black_stroke": [93, 88, 89, 80],
+
+  "_artboard": "auto = 내용이 A4(여백 포함)에 들어가면 A4 세로/가로 중앙 배치, 아니면 내용+여백 크기. fit = 항상 내용+여백. a4 = 항상 A4. [w,h] = mm 고정",
+  "artboard": "auto",
+  "artboard_margin_mm": 20,
+
+  "_auto_dimension": "도면 외곽선마다 가로/세로 치수를 가이드 레이어에 자동 표기",
+  "auto_dimension": true,
+  "dim_suffix": "mm",
+  "dim_cmyk": [71, 63, 60, 14],
+  "dim_offset_mm": 6,
+
+  "_solid_background": "솔리드 인쇄면을 배경색 레이어에 면으로 깔 색. null = 안 깜. 예: [17,16,20,0] (문구 플레이트 베이지)",
+  "solid_background": null,
+
+  "text_size_pt": 8,
+  "save": true
+}

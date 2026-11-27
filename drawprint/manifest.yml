@@ -1,0 +1,14 @@
+name: drawprint
+version: 1.0.0
+authors:
+- found/Founded
+description: >
+  선택한 객체를 FOUNDFOUNDED 인쇄 데이터 규칙으로 일러스트 AI(mm 1:1, CMYK)로 저장합니다.
+  레이어는 인쇄(면)·가이드(치수)·도면(외곽선)·배경색(면). 솔리드는 인쇄면 외곽 실측, 없으면 Make2D.
+  파일 이름 <프로젝트명>_인쇄 데이터_FOUNDFOUNDED.ai. 명령어 DrawPrint. 검토용 A4 축척 도면은 a4draw.
+url: https://foundfounded.com
+keywords:
+- print
+- illustrator
+- ai
+- cmyk

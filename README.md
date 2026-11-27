@@ -10,6 +10,7 @@ found/Founded 팀이 쓰는 Rhino 8 플러그인 모음이에요. 산업디자�
 | NPatch | `NPatch`, `NPatchFill` | N각형 구멍을 매끈한 NURBS 서피스 한 장으로 채우기 (G0·G1·G2) |
 | ida-connect | `IdaConnect` | Rhino가 켜질 때 RhinoMCP(mcpstart)를 자동으로 켜서 에이전트와 연결 (`IdaConnect`에서 AutoConnect On/Off) |
 | a4draw | `A4Drawing`, `A4DrawingExport` | 선택한 객체의 탑뷰 Make2D + 치수를 A4 도곽에 실제 축척으로 배치해 SVG·AI(일러스트)로 내보내기. 고친 뒤 다시 내보내기는 `A4DrawingExport` |
+| drawprint | `DrawPrint` | 선택한 객체를 인쇄 데이터 규칙(인쇄·가이드·도면·배경색 레이어, CMYK, mm 1:1)으로 일러스트 AI 저장. 전달용. 옵션: View, Artboard(Auto·Fit·A4), Background, Dimension, Name, Folder |
 | imageperf | `ImagePerf`, `-ImagePerf` | 이미지 밝기로 구멍 크기(하프톤)·유무를 정하는 타공. 평면·복곡면, 트림·불리언, 실시간 패널 (이미지 끌어다 놓기) |
 | bambu | `Bambu` | 선택한 객체를 서포트가 가장 적은 방향으로 눕히고, 뱀부랩 X2D 판보다 크면 나누고(맞춤 핀 구멍), 판별로 배치해 STL로 내보내기 |
 
@@ -24,7 +25,8 @@ ida-plugins/
 ├─ ida-connect/      ← 소스(src/) + manifest.yml
 ├─ bambu/            ← 소스(src/) + manifest.yml
 ├─ imageperf/        ← 소스(src/) + manifest.yml, dev/ 테스트 스크립트
-└─ a4draw/           ← 소스(src/) + manifest.yml (시험 빌드: testbuild.sh)
+├─ a4draw/           ← 소스(src/) + manifest.yml (시험 빌드: testbuild.sh)
+└─ drawprint/        ← 소스(src/, 일러스트 빌더 ai_build.jsx·규칙 config.json 포함) + manifest.yml (시험 빌드: testbuild.sh)
 ```
 
 ## 에이전트 규칙 · KeyShot 환경 (`agent/`)
