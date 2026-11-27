@@ -5,7 +5,7 @@
     <AssemblyName>drawprint</AssemblyName>
     <RootNamespace>IDA.DrawPrint</RootNamespace>
     <TargetExt>.rhp</TargetExt>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Title>drawprint</Title>
     <Description>선택한 객체를 FOUNDFOUNDED 인쇄 데이터 규칙(인쇄·가이드·도면·배경색 레이어, CMYK, mm 1:1)으로 일러스트 AI 저장</Description>
     <Company>found/Founded</Company>

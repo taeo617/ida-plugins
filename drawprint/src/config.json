@@ -45,6 +45,8 @@
   "_solid_background": "솔리드 인쇄면을 배경색 레이어에 면으로 깔 색. null = 안 깜. 예: [17,16,20,0] (문구 플레이트 베이지)",
   "solid_background": null,
 
+  "_font": "치수, 글자 글꼴 (PostScript 이름). 없으면 일러스트 기본 글꼴",
+  "font": "Pretendard-Regular",
   "text_size_pt": 8,
   "save": true
 }

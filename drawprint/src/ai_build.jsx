@@ -28,6 +28,14 @@
   }
   function rgbc(a) { var o = new RGBColor(); o.red = a[0]; o.green = a[1]; o.blue = a[2]; return o; }
 
+  // ---------- 글꼴: 팀 기본 Pretendard (없으면 일러스트 기본 글꼴 그대로)
+  var FONT = null;
+  var fontNames = [C.font || 'Pretendard-Regular', 'Pretendard-Regular', 'PretendardVariable-Regular', 'Pretendard'];
+  for (var fi = 0; fi < fontNames.length && !FONT; fi++) { try { FONT = app.textFonts.getByName(fontNames[fi]); } catch (e) {} }
+  function setFont(tf) { if (FONT) try { tf.textRange.characterAttributes.textFont = FONT; } catch (e) {} }
+  // 격리 모드 해제: 막 켜진 일러스트가 격리 모드로 시작하면 레이어 패널에 '격리 모드'만 보이고 그 상태로 저장될 수 있음
+  function exitIsolation() { for (var q = 0; q < 3; q++) { try { app.executeMenuCommand('exitisolation'); } catch (e) {} } }
+
   // ---------- 문서
   app.coordinateSystem = CoordinateSystem.DOCUMENTCOORDINATESYSTEM;
   var preset = new DocumentPreset();
@@ -36,7 +44,7 @@
   preset.width = 210 * MM; preset.height = 297 * MM;
   preset.title = D.project;
   var doc = app.documents.addDocument('Print', preset);
-  try { app.executeMenuCommand('exitisolation'); } catch (e) {}  // 막 실행된 Illustrator가 격리 모드로 시작되는 경우 방지
+  exitIsolation();
 
   // ---------- 레이어 (위 -> 아래 순서: config 순서, 미분류 레이어는 맨 위)
   var used = {}, i, j;
@@ -96,6 +104,7 @@
     var t = D.texts[i], tg = group(t.layer, t.src);
     var tf = tg.textFrames.pointText([t.x, t.y]);
     tf.contents = t.text;
+    setFont(tf);
     tf.textRange.characterAttributes.size = t.size;
     tf.textRange.characterAttributes.fillColor = toCMYK(t.rgb, t.cmyk, true);
     count[t.layer] = (count[t.layer] || 0) + 1;
@@ -109,6 +118,7 @@
     function seg(x1, y1, x2, y2) { var p = dg.pathItems.add(); p.setEntirePath([[x1, y1], [x2, y2]]); p.filled = false; p.stroked = true; p.strokeColor = dcol; p.strokeWidth = 0.3; return p; }
     function label(txt, x, y, center) {
       var t = dg.textFrames.pointText([x, y]); t.contents = txt;
+      setFont(t);
       t.textRange.characterAttributes.size = fs; t.textRange.characterAttributes.fillColor = dcol;
       if (center) t.textRange.paragraphAttributes.justification = Justification.CENTER;
       return t;
@@ -155,10 +165,19 @@
   // 빈 그룹 정리
   for (var g in G) { if (G[g].pageItems.length === 0) G[g].remove(); }
 
+  // ---------- 저장 전 정리: 격리 모드 해제, 선택 해제, 레이어는 모두 보이기·잠금 해제·인쇄 가능, 맨 위 레이어를 현재 레이어로
+  app.activeDocument = doc;
+  exitIsolation();
+  try { doc.selection = null; } catch (e) {}
+  for (i = 0; i < doc.layers.length; i++) { try { doc.layers[i].visible = true; doc.layers[i].locked = false; doc.layers[i].printable = true; } catch (e) {} }
+  try { doc.activeLayer = doc.layers[0]; } catch (e) {}
+
   // ---------- 저장
   var msg = [];
   for (var c in count) msg.push(c + ' ' + count[c]);
-  var result = 'OK | ' + msg.join(', ') + ' | 아트보드 ' + Math.round(W / MM) + 'x' + Math.round(H / MM) + 'mm';
+  var lnames = []; for (i = 0; i < doc.layers.length; i++) lnames.push(doc.layers[i].name);
+  var result = 'OK | ' + msg.join(', ') + ' | 아트보드 ' + Math.round(W / MM) + 'x' + Math.round(H / MM) + 'mm' +
+    ' | 레이어 ' + lnames.join('·') + ' | 글꼴 ' + (FONT ? FONT.name : '기본');
   if (D.save_path) {
     var opt = new IllustratorSaveOptions(); opt.pdfCompatible = true; opt.embedICCProfile = true;
     var sf = new File(D.save_path);
@@ -166,7 +185,7 @@
     doc.saveAs(sf, opt);
     result += (new File(D.save_path).exists ? ' | 저장: ' : ' | 저장 실패: ') + D.save_path;
   }
-  app.activeDocument = doc;
+  exitIsolation();
   try { app.executeMenuCommand('fitall'); } catch (e) {}
   return result;
 })();
