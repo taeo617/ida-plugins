@@ -9,6 +9,7 @@
 | LunchBox | Grasshopper › **LunchBox** 탭 | 곡면 패널링 (다이아몬드, 육각, 삼각, 사각) |
 | Pufferfish | Grasshopper › **Pufferfish** 탭 | 트윈과 블렌드 (두 형태 사이를 단계적으로 바꾸기) |
 | SnappingGecko | Grasshopper 캔버스 메뉴 | 컴포넌트 정렬 스냅 (캔버스 정리) |
+| gh-dark-mode | Grasshopper 전체 화면 | 다크 테마 |
 
 ---
 
@@ -148,6 +149,19 @@
 
 ---
 
+## 6. gh-dark-mode (Grasshopper · 다크 모드)
+
+Grasshopper 캔버스와 컴포넌트를 어두운 테마로 바꿔 줘요. Rhino 8.24 이상에서 돼요.
+
+1. Grasshopper 캔버스에 **GH Dark Mode** 컴포넌트를 올려요 (캔버스 빈 곳 더블클릭 → `Dark Mode` 검색).
+2. 입력에 `Button` 또는 `Boolean Toggle`을 연결하고 **Dark Mode / Light Mode**를 골라 적용해요.
+3. **Grasshopper를 껐다 켜야** 모든 화면 요소에 적용돼요.
+4. 원래 밝은 테마로 돌아가려면 같은 컴포넌트에서 Light Mode를 적용해요. 꼬였을 때는 Factory reset 옵션이 있어요.
+5. 색을 직접 바꾸려면 **GH Dark Mode Override** 컴포넌트에 바꿀 항목과 색을 넣어 연결해요.
+- 자세한 설명: [github.com/puya/gh-dark-mode](https://github.com/puya/gh-dark-mode)
+
+---
+
 ## 앱 탭에서 설치되지 않는 것
 
 아래는 Yak 저장소에 없어서 탭으로 설치할 수 없어요. 필요하면 [food4Rhino](https://www.food4rhino.com)에서 로그인 후 직접 받아야 해요.
@@ -155,4 +169,4 @@
 - **Vectorize** (이미지 → 커브)
 - **Treesloth** (데이터 트리 정리)
 - **Blindfold** (참조 객체 숨기기)
-- **Moonlight** (그래스호퍼 다크 모드). Yak에는 비슷한 `gh-dark-mode`가 있어요.
+- **Moonlight** (그래스호퍼 다크 모드). 대신 위의 `gh-dark-mode`를 쓰세요.
