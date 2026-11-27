@@ -30,15 +30,143 @@
   },
   "examples": [
     {
-      "name": "필렛제거 예시.3dm",
-      "title": "필렛 제거 예시 (STL 넙스 변환 포함)",
-      "file": "examples/필렛제거 예시.3dm",
+      "name": "필렛 지우기 예시.3dm",
+      "title": "필렛이 들어간 몸체",
+      "tool": "m-unfillet",
+      "file": "examples/필렛 지우기 예시.3dm",
       "version": "1"
     },
     {
-      "name": "엑스넙스 플러그인 개발.3dm",
-      "title": "엑스넙스 플러그인 예시",
-      "file": "examples/엑스넙스 플러그인 개발.3dm",
+      "name": "필렛 크기 바꾸기 예시.3dm",
+      "title": "R2 필렛 케이스",
+      "tool": "m-refillet",
+      "file": "examples/필렛 크기 바꾸기 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "스케치 3D 예시.png",
+      "title": "텀블러 스케치 이미지",
+      "tool": "m-sketch",
+      "file": "examples/스케치 3D 예시.png",
+      "version": "1"
+    },
+    {
+      "name": "용량에 맞추기 예시.3dm",
+      "title": "빈 컵 (약 260ml)",
+      "tool": "m-fit-volume",
+      "file": "examples/용량에 맞추기 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "메쉬 넙스 변환 예시.3dm",
+      "title": "STL 메쉬 리모컨",
+      "tool": "m-mesh2nurbs",
+      "file": "examples/메쉬 넙스 변환 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "사출 가능 체크 예시.3dm",
+      "title": "구배 0·언더컷 커버",
+      "tool": "a-mold",
+      "file": "examples/사출 가능 체크 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "3D 프린트 점검 예시.3dm",
+      "title": "얇은 벽·오버행·열린 면 부품",
+      "tool": "a-print",
+      "file": "examples/3D 프린트 점검 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "레이어 정리 예시.3dm",
+      "title": "한 레이어에 섞인 스피커 파트",
+      "tool": "o-layers",
+      "file": "examples/레이어 정리 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "D5용 레이어 정리 예시.3dm",
+      "title": "재질이 섞인 스탠드 조명",
+      "tool": "o-d5",
+      "file": "examples/D5용 레이어 정리 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "객체 이름 붙이기 예시.3dm",
+      "title": "이름 없는 휴대용 선풍기",
+      "tool": "o-names",
+      "file": "examples/객체 이름 붙이기 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "타공 패턴 예시.3dm",
+      "title": "스피커 앞판",
+      "tool": "g-pattern",
+      "file": "examples/타공 패턴 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "단면 슬라이스 예시.3dm",
+      "title": "비틀린 곡면 오브제",
+      "tool": "g-slice",
+      "file": "examples/단면 슬라이스 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "커브 따라 배열 예시.3dm",
+      "title": "S 커브 + 모듈",
+      "tool": "g-array",
+      "file": "examples/커브 따라 배열 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "변형안 비교 예시.gh",
+      "title": "슬라이더 4개짜리 판 정의 (그래스호퍼)",
+      "tool": "g-variants",
+      "file": "examples/변형안 비교 예시.gh",
+      "version": "1"
+    },
+    {
+      "name": "도면 치수 예시.3dm",
+      "title": "보조배터리",
+      "tool": "d-make2d",
+      "file": "examples/도면 치수 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "도면 치수 예시.3dm",
+      "title": "보조배터리",
+      "tool": "d-dims",
+      "file": "examples/도면 치수 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "3export 전시사 전달 예시.3dm",
+      "title": "재질·텍스처 들어간 스피커",
+      "tool": "plugin:3export",
+      "file": "examples/3export 전시사 전달 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "3export 예시_나무결.png",
+      "title": "3export 예시 텍스처",
+      "tool": null,
+      "file": "examples/3export 예시_나무결.png",
+      "version": "1"
+    },
+    {
+      "name": "NPatch 구멍 채우기 예시.3dm",
+      "title": "구멍 난 형상",
+      "tool": "plugin:npatch",
+      "file": "examples/NPatch 구멍 채우기 예시.3dm",
+      "version": "1"
+    },
+    {
+      "name": "bambu 출력 준비 예시.3dm",
+      "title": "높이 300mm 화분",
+      "tool": "plugin:bambu",
+      "file": "examples/bambu 출력 준비 예시.3dm",
       "version": "1"
     }
   ]
