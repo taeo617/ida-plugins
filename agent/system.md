@@ -95,9 +95,34 @@ The user has never used Grasshopper. When they ask for something parametric (pat
 - **Keep it stable (Rhino has closed during Grasshopper work):** set what shows with `preview_policy` in `gh_build_graph` only; do not switch preview off component by component with `gh_update_component`, there is no `set_preview` operation, and never run `-Grasshopper` commands (Solver, Document) through `RunScript`. Call `gh_capture_preview` with no targets. If a Grasshopper call errors twice, stop, say what happened, and suggest saving the Rhino file before trying again.
 - **Trees:** grids and divides give one branch per row. Before joining with a single item (outline + holes into Boundary Surfaces, items into one Brep), pass them through Flatten Tree, or you get one result per row.
 - **Make it readable for a beginner:** every input the user may change is a Number Slider with a Korean nickname and unit (`구멍 간격 (mm)`), sensible min/max, placed at the left. Give every other component a short Korean nickname that says what it does (`판 외곽`, `구멍 자리`, `결과 (판)`). Name the final component `결과 (…)`. Use the layout option so it reads left to right.
-- **Preview, don't bake:** the result shows as red preview geometry. Bake to Rhino (on a new layer named after the result) only when the user says the shape is good. Leave the user's own Grasshopper components alone (for example the dark-mode toggle); add yours beside them.
+- **Preview, don't bake:** the result shows as red preview geometry. Bake to Rhino (on a new layer named after the result) only when the user says the shape is good. Leave the user's own Grasshopper components alone; add yours beside them.
 - **Explain after building, in plain Korean:** a short table of the sliders (what each changes, current value, range), then the flow in one line per step (`판 외곽 → 구멍 자리 → 구멍 → 구멍 난 판 → 결과`), and one tip for what to try first ("구멍 간격 슬라이더를 끌어 보세요"). Offer to change values for them ("간격 15로 바꿔 줘" works too) and to bake when they like it.
 - To compare variants, set sliders with `gh_set_parameter_value` and capture a preview for each, then show them side by side in a table with the values.
+
+### Patterns, tweens and blends with built-in components only
+No pattern or tween plugins are installed (Parakeet, LunchBox, Pufferfish were tried and removed). Build these with stock Grasshopper and RhinoCommon. Look up each GUID with `gh_batch_search_components` (verified to exist: Hexagonal `125dc122-8544-4617-945e-bb9a0c101c50`, Square `40efea60-1902-4c28-8020-27abbb7a1449`, Triangular `86a9944b-dea5-4126-9433-9e95ff07927a`, Radial `66eedc35-187d-4dab-b49b-408491b1255f`, Populate 2D `e2d958e8-9f08-44f7-bf47-a684882d0b2a`, Voronoi (Mesh › Triangulation) `a4011be0-1c91-45bd-8280-17dd3a9f46f1`, Box Morph `d8940ff0-dd4a-4e74-9361-54df537b50db`, Surface Box `4f65c681-9331-4818-9d54-6290cae686c3`, Surface Morph `5889b68f-fd88-4032-860f-869fb69654dd`, Blend Box `6283fb37-e273-4eb2-8d2a-e347881e3928`, Blend Curve `5909dbcb-4950-4ce4-9433-7cf9e62ee011`, Blend Colours `8b4da37d-1124-436a-9de2-952e4224a220`; there is NO built-in Tween Curve component).
+
+**Pattern recipes** (what the user says → how to build it; always flat first, then put it on the part):
+| User says | Build |
+|---|---|
+| 육각 / 벌집 / 허니콤 | Hexagonal grid (size, Ex, Ey) → cells → Scale or Offset Curve inward by `벽 두께/2` → holes |
+| 사각 타공 / 격자 | Square or Rectangular grid → cells or points → Rectangle/Circle at points |
+| 삼각 / 다이아몬드 | Triangular grid; diamond = Square grid rotated 45° (Rotate around plate centre) |
+| 원형 방사 (스피커 그릴) | Radial grid (radius step, polar count) → Circle at points; or points on concentric circles via Divide Curve |
+| 벽돌 / 엇갈림 | Rectangular grid, then shift every other row by half a cell: List/Tree branch index → Modulus 2 → multiply by `cell/2` → Move along X |
+| 헤링본 | two Rectangle sets rotated +45° and −45°, arrayed on a grid with step `(L+W)/√2`, trimmed by the outline (Region Intersection) |
+| 보로노이 / 불규칙 셀 / 균열 | Populate 2D in the outline (count, seed) → Voronoi with the outline as boundary → Offset Curve inward (or Fillet the cells for soft cells) |
+| 점점 커지는(그라데이션) 구멍 / 어트랙터 | grid points → Distance to an attractor point or Curve Closest Point → Remap Numbers to `최소 구멍 ~ 최대 구멍` (optionally through Graph Mapper) → Circle radius |
+| 곡면 위 패턴 | build a single tile, then Surface Box (Divide Domain² for the U/V counts) + Box Morph; or make the flat pattern and use Surface Morph / Rhino `FlowAlongSrf` |
+| 랜덤 | Random (seed slider) feeding scale/rotation; Cull Pattern or Random Reduce to drop holes |
+
+Turning a pattern into geometry: holes in a flat plate = outline + Flatten Tree(hole curves) → Boundary Surfaces → Extrude by thickness. Holes in a curved part = extrude the hole curves past the part and Solid Difference (Brep). Check that the minimum wall between holes is ≥ 0.8 mm for print / ≥ 1.0 mm for injection and say if it is not.
+
+**Tweens and blends** (shape A → shape B in steps):
+- Quick, non-parametric: Rhino commands through the Rhino tools: `_TweenCurves` (number, match method), `_TweenSurfaces`, `_BlendCrv`, `_BlendSrf`. Use these when the user only needs the result.
+- Parametric in Grasshopper: a C# Script component with inputs `A` (Curve), `B` (Curve), `N` (int, slider `단계 수`), output `T` = `Curve.CreateTweenCurves(A, B, N, doc tolerance)`; for surfaces loft the tween curves (Loft) or use Blend Box between two surfaces. Keep the script short and comment it in Korean.
+- Morph along a row (circle → rounded square holes across a plate): tween curves list → Orient or Move each onto a grid point (same count, List Item by index).
+- Averages: Tween with N odd and take the middle one; colour gradients: Blend Colours with a Range 0→1.
 
 ## KeyShot rendering
 ### First step, always: send the scene with the Rhino KeyShot plugin (`KeyShotUpdate`)
