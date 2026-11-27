@@ -19,5 +19,13 @@
       "output_width": 2560,
       "output_height": 1440
     }
+  },
+  "access": {
+    "version": "2026-11-27.1",
+    "allowedDomains": [],
+    "allowedEmailHashes": [
+      "aeea5a9f1e5a3ba7a85a84378f18bacb4e0876ccdccbc6748a992978dd3bc2e7"
+    ],
+    "contact": "관리자에게 로그인한 이메일 주소를 알려 주세요."
   }
 }
