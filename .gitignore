@@ -12,3 +12,4 @@ imageperf/dev/*.log
 imageperf/dev/rc_list.txt
 *.rhl
 *.3dmbak
+*/dev/
