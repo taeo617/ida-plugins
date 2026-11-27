@@ -39,8 +39,6 @@ namespace NPatch
         InteriorPoints = interior,
       };
       var session = new PatchSession(inputs, opt, doc.ModelAbsoluteTolerance, sourceId, sourceBrep);
-      session.SolveNow();
-
       var conduit = new PatchConduit(session)
       {
         ShowZebra = PatchSettings.Zebra,
@@ -56,6 +54,8 @@ namespace NPatch
       {
         conduit.Enabled = true;
         clicker.Enabled = true;
+        // First solve runs in the background so the panel and viewport stay responsive.
+        session.SolveAsync();
         doc.Views.Redraw();
         ok = dlg.ShowSemiModal(doc, RhinoEtoApp.MainWindow);
       }

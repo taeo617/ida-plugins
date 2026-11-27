@@ -384,7 +384,8 @@ namespace NPatch
       double[] Assemble(NurbsSurface prev)
       {
         int N = nU * nV * 3;
-        var M = new double[N * N];
+        int bw = 3 * (p_ * nV + p_ + 1); // half bandwidth of M with this unknown ordering
+        var M = new BandMatrix(N, bw);
         var rhs = new double[N];
         var rowIdx = new int[3 * (p_ + 1) * (p_ + 1)];
         var rowVal = new double[rowIdx.Length];
@@ -393,9 +394,9 @@ namespace NPatch
           for (int a = 0; a < count; a++)
           {
             double wa = w * rowVal[a];
-            int ia = rowIdx[a] * N;
-            rhs[rowIdx[a]] += wa * target;
-            for (int b = 0; b < count; b++) M[ia + rowIdx[b]] += wa * rowVal[b];
+            int ia = rowIdx[a];
+            rhs[ia] += wa * target;
+            for (int b = 0; b < count; b++) M.Add(ia, rowIdx[b], wa * rowVal[b]);
           }
         }
         // Row = sum_ab Bu[du,a] Bv[dv,b] * (n . P_ab) when n != null, else component c only.
@@ -445,7 +446,7 @@ namespace NPatch
           for (int j = 0; j < nV; j++)
           {
             double[] tgt = { grevU[i] * ax, grevV[j] * ay, 0 };
-            for (int c = 0; c < 3; c++) { int ix = Idx(i, j, c); M[ix * N + ix] += wReg; rhs[ix] += wReg * tgt[c]; }
+            for (int c = 0; c < 3; c++) { int ix = Idx(i, j, c); M.Add(ix, ix, wReg); rhs[ix] += wReg * tgt[c]; }
           }
 
         // c. Boundary constraints.
@@ -492,8 +493,7 @@ namespace NPatch
           AddRow(FillRow(su, Bu, 0, sv, Bv, 0, null, 2), qc[2], opt.PositionWeight);
         }
 
-        int bw = 3 * (p_ * nV + p_ + 1); // half bandwidth of M with this unknown ordering
-        return BandCholeskySolve(M, rhs, N, bw) ? rhs : null;
+        return M.Solve(rhs) ? rhs : null;
       }
     }
 

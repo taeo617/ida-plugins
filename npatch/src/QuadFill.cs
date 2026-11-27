@@ -172,11 +172,11 @@ namespace NPatch
         int passes = ps.Max(p => p.Passes);
         for (int pass = 0; pass < passes; pass++)
         {
-          var M = new double[(long)N * N];
+          var M = new BandMatrix(N, bw);
           var rhs = new double[N];
           for (int k = 0; k < ps.Count; k++) ps[k].Assemble(srfs[k], M, rhs, N, joint);
           foreach (var s in seams) Couple(ps[s.A], s.KA, ps[s.B], s.KB, s.Same, M, N);
-          if (!NSidedFill.BandCholeskySolve(M, rhs, N, bw)) return false;
+          if (!M.Solve(rhs)) return false;
           for (int k = 0; k < ps.Count; k++) srfs[k] = ps[k].Make(rhs);
         }
         return true;
@@ -197,7 +197,7 @@ namespace NPatch
     internal static int SeamKeepEnd = 2;   // end position + direction stay on the cut; its bend there is free
 
     /// <summary>Ties piece A's side ka to piece B's side kb (opposite directions, same frame): same points, C1, C2.</summary>
-    static void Couple(Sys a, int ka, Sys b, int kb, bool same, double[] M, int N)
+    static void Couple(Sys a, int ka, Sys b, int kb, bool same, BandMatrix M, int N)
     {
       int n = a.AlongCount(ka);
       if (b.AlongCount(kb) != n) return;
@@ -210,8 +210,7 @@ namespace NPatch
         for (int x = 0; x < cnt; x++)
         {
           double wx = w * val[x];
-          long ix = (long)idx[x] * N;
-          for (int y = 0; y < cnt; y++) M[ix + idx[y]] += wx * val[y];
+          for (int y = 0; y < cnt; y++) M.Add(idx[x], idx[y], wx * val[y]);
         }
       }
       for (int e = 0; e < n; e++)
@@ -529,7 +528,7 @@ namespace NPatch
       }
 
       /// <summary>Adds this piece's normal equations into the (joint) system. Joint: shared sides are left to the coupling.</summary>
-      public void Assemble(NurbsSurface prev, double[] M, double[] rhs, int N, bool joint)
+      public void Assemble(NurbsSurface prev, BandMatrix M, double[] rhs, int N, bool joint)
       {
         int p = P, nU = NU, nV = NV;
         var rowIdx = new int[3 * (p + 1) * (p + 1)];
@@ -539,9 +538,9 @@ namespace NPatch
           for (int a = 0; a < count; a++)
           {
             double wa = w * rowVal[a];
-            long ia = (long)rowIdx[a] * N;
-            rhs[rowIdx[a]] += wa * target;
-            for (int b = 0; b < count; b++) M[ia + rowIdx[b]] += wa * rowVal[b];
+            int ia = rowIdx[a];
+            rhs[ia] += wa * target;
+            for (int b = 0; b < count; b++) M.Add(ia, rowIdx[b], wa * rowVal[b]);
           }
         }
         int FillRow(int su, double[,] Bu, int du, int sv, double[,] Bv, int dv, Vector3d? nrm, int c)
@@ -600,7 +599,7 @@ namespace NPatch
             var tgt = Pin[i, j] ?? coons[i, j];
             double w = Pin[i, j].HasValue ? wPin : wReg;
             double[] tc = { tgt.X, tgt.Y, tgt.Z };
-            for (int c = 0; c < 3; c++) { int ix = Idx(i, j, c); M[(long)ix * N + ix] += w; rhs[ix] += w * tc[c]; }
+            for (int c = 0; c < 3; c++) { int ix = Idx(i, j, c); M.Add(ix, ix, w); rhs[ix] += w * tc[c]; }
           }
 
         // c. Continuity rows across each border.
