@@ -39,6 +39,8 @@ namespace IDA.Bambu
             var optPins = new OptionToggle(st.GetBool("pins", true), "Off", "On");
             var optExport = new OptionToggle(st.GetBool("export", true), "Off", "On");
             var optGap = new OptionDouble(st.GetDouble("gap", 5.0), 1.0, 50.0);
+            // Prefer: 판보다 큰 것을 기울여 넣을지 / 나눠서 눕힐지 (Auto = 점수로 판단)
+            int prefer = Math.Max(0, Array.IndexOf(PreferNames, st.GetString("prefer", "Auto")));
 
             var go = new GetObject();
             go.SetCommandPrompt("뱀부 X2D로 출력할 객체를 고르세요");
@@ -46,21 +48,24 @@ namespace IDA.Bambu
             go.SubObjectSelect = false;
             go.GroupSelect = true;
             go.EnablePreSelect(true, true);
-            go.AddOptionToggle("Split", ref optSplit);
-            go.AddOptionToggle("Pins", ref optPins);
-            go.AddOptionDouble("Gap", ref optGap);
-            go.AddOptionToggle("ExportSTL", ref optExport);
-            int folderOpt = go.AddOption("Folder");
             string outDir = null;          // 이번에 고른 STL 폴더 (null이면 내보낼 때 물어봄)
             // 미리 고른 객체가 있어도 옵션(Split=On 등)을 받을 수 있게: 미리 고른 걸 받은 뒤 Enter까지 옵션만 더 받음
             bool havePre = false;
             while (true)
             {
+                go.ClearCommandOptions();
+                go.AddOptionToggle("Split", ref optSplit);
+                go.AddOptionToggle("Pins", ref optPins);
+                int preferOpt = go.AddOptionList("Prefer", PreferNames, prefer);
+                go.AddOptionDouble("Gap", ref optGap);
+                go.AddOptionToggle("ExportSTL", ref optExport);
+                int folderOpt = go.AddOption("Folder");
                 var r = go.GetMultiple(1, 0);
                 if (r == GetResult.Option)
                 {
                     go.EnablePreSelect(false, true);
-                    if (go.OptionIndex() == folderOpt)
+                    if (go.OptionIndex() == preferOpt) prefer = go.Option().CurrentListOptionIndex;
+                    else if (go.OptionIndex() == folderOpt)
                     {
                         var picked = mode == RunMode.Interactive ? PickFolder(DefaultFolder(doc, st)) : AskFolder(DefaultFolder(doc, st));
                         if (picked != null) { outDir = picked; RhinoApp.WriteLine("STL 폴더: " + outDir); }
@@ -84,6 +89,7 @@ namespace IDA.Bambu
             }
             st.SetBool("split", optSplit.CurrentValue); st.SetBool("pins", optPins.CurrentValue);
             st.SetBool("export", optExport.CurrentValue); st.SetDouble("gap", optGap.CurrentValue);
+            st.SetString("prefer", PreferNames[prefer]);
 
             double mm = RhinoMath.UnitScale(UnitSystem.Millimeters, doc.ModelUnitSystem); // 1mm = 문서 단위로 몇
             double toMm = 1.0 / mm;
@@ -110,23 +116,50 @@ namespace IDA.Bambu
                 if (brep != null) { geo = brep; mesh = BrepMesh(brep, mp); }
                 if (mesh == null || mesh.Faces.Count == 0) { log.Add($"• {name}: 메쉬를 만들지 못해 건너뜀"); continue; }
 
-                var o = Orient.Best(mesh, mm, pw, pd, ph);
-                if (!o.Fits && optSplit.CurrentValue && brep != null && brep.IsSolid)
+                // 1) 서포트 최소 자세(Free)가 판에 들어가면 그대로. 2) 아니면 기울여 넣기(Fit) vs 나눠서 눕히기(Free + 자르기 비용)
+                var an = Orient.Analyze(mesh, mm, pw, pd, ph);
+                var o = an.Fit ?? an.Free;
+                bool canSplit = optSplit.CurrentValue && brep != null && brep.IsSolid;
+                bool doSplit = false;
+                string why = null;
+                if (!an.Free.Fits)
                 {
-                    log.Add($"• {name}: 판({PlateW}×{PlateD}×{PlateH}mm)보다 커서 나눔");
-                    var pieces = Split.ToFit(brep, o.Xform, pw - 6 * mm, ph, optPins.CurrentValue, mm, tol, log);
-                    int k = 0;
-                    foreach (var pc in pieces)
+                    int pieces0 = EstimatePieces(an.Free, pw - 6 * mm, ph, mm);
+                    double thick = an.Free.Height * toMm;          // 눕혔을 때 두께 = 자른 면의 폭
+                    bool pinOk = thick >= 8;                       // Ø4.2 핀 + 양쪽 벽 여유
+                    double splitCost = an.Free.Score + (pieces0 - 1) * (0.6 + (pinOk ? 0 : 0.8));
+                    string fitDesc = an.Fit == null ? null
+                        : $"바닥 폭 {an.Fit.BaseWidth * toMm:0}mm·높이 {an.Fit.Height * toMm:0}mm, 서포트 {an.Fit.OverhangArea * toMm * toMm:0}mm²";
+                    if (an.Fit == null) { doSplit = true; why = "어느 방향으로도 판에 안 들어감"; }
+                    else if (prefer == 1) { why = "Prefer=Tilt"; }
+                    else if (prefer == 2) { doSplit = true; why = "Prefer=Split"; }
+                    else if (an.Fit.Stability == 2) { doSplit = true; why = $"판에 넣으려면 세워야 하는데 모서리로만 서서 불안정({fitDesc})"; }
+                    else if (splitCost < an.Fit.Score) { doSplit = true; why = $"기울이면 {fitDesc} — 나누는 쪽이 나음"; }
+                    else why = null;
+
+                    if (doSplit && canSplit)
                     {
-                        var pm = BrepMesh(pc, mp);
-                        if (pm == null || pm.Faces.Count == 0) continue;
-                        k++;
-                        parts.Add(new Part { Name = $"{name}-{k}", Geo = pc, Mesh = pm, O = Orient.Best(pm, mm, pw, pd, ph) });
+                        log.Add($"• {name}: 눕혀서 나눔 — {why}");
+                        var pieces = Split.ToFit(brep, an.Free.Xform, pw - 6 * mm, ph, optPins.CurrentValue, mm, tol, log);
+                        if (!pinOk && optPins.CurrentValue) log.Add($"    두께 {thick:0.#}mm라 핀이 들어갈 자리가 없어요 → 자른 면은 접착(CA·에폭시) 권장");
+                        int k = 0;
+                        foreach (var pc in pieces)
+                        {
+                            var pm = BrepMesh(pc, mp);
+                            if (pm == null || pm.Faces.Count == 0) continue;
+                            k++;
+                            parts.Add(new Part { Name = $"{name}-{k}", Geo = pc, Mesh = pm, O = Orient.Best(pm, mm, pw, pd, ph) });
+                        }
+                        log.Add($"    → 조각 {k}개");
+                        continue;
                     }
-                    log.Add($"    → 조각 {k}개");
-                    continue;
+                    if (an.Fit != null)
+                    {
+                        string tail = doSplit ? " (나누는 게 낫지만 " + NoSplitReason(brep, optSplit.CurrentValue) + " 기울여 넣음)" : "";
+                        log.Add($"• {name}: 기울여 넣기 선택 — {fitDesc}, 나누면 {pieces0}조각" + (why != null && !doSplit ? $" ({why})" : "") + tail);
+                    }
+                    else log.Add($"• {name}: 판보다 큰데 " + NoSplitReason(brep, optSplit.CurrentValue) + " 나누지 못했어요");
                 }
-                if (!o.Fits) log.Add($"• {name}: 판보다 큰데 " + (brep == null ? "메쉬라서" : !brep.IsSolid ? "닫힌 솔리드가 아니라서" : "나누기(Split)가 꺼져 있어서") + " 나누지 못했어요");
                 parts.Add(new Part { Name = name, Geo = geo, Mesh = mesh, O = o });
             }
             if (parts.Count == 0) { RhinoApp.WriteLine("출력할 객체가 없어요."); return Result.Nothing; }
@@ -212,7 +245,8 @@ namespace IDA.Bambu
             {
                 double sup = p.O.OverhangArea * toMm * toMm;
                 string s = sup < 1 ? "서포트 없음" : $"서포트 필요 {sup:0}mm² (빨간 표시)";
-                RhinoApp.WriteLine($"• {p.Name}: 판 {p.P.Plate + 1}, {p.O.Width * toMm:0}×{p.O.Depth * toMm:0}×{p.O.Height * toMm:0}mm, {s}" + (p.O.Fits ? "" : " — 판보다 큼!"));
+                string b = p.O.Stability == 1 ? ", 브림 권장" : p.O.Stability == 2 ? ", 쓰러질 수 있음(브림·서포트로 받쳐야 함)" : "";
+                RhinoApp.WriteLine($"• {p.Name}: 판 {p.P.Plate + 1}, {p.O.Width * toMm:0}×{p.O.Depth * toMm:0}×{p.O.Height * toMm:0}mm, {s}{b}" + (p.O.Fits ? "" : " — 판보다 큼!"));
             }
             if (folder != null)
             {
@@ -221,6 +255,18 @@ namespace IDA.Bambu
             }
             return Result.Success;
         }
+
+        static readonly string[] PreferNames = { "Auto", "Tilt", "Split" };
+
+        // 눕힌 자세에서 판(여유 빼고)에 맞추려면 몇 조각이 되는지 (Split.ToFit과 같은 계산)
+        static int EstimatePieces(OrientResult o, double limXY, double limZ, double mm)
+        {
+            int N(double len, double lim) => len <= lim ? 1 : (int)Math.Ceiling(len / (lim - 2 * mm));
+            return N(o.Width, limXY) * N(o.Depth, limXY) * N(o.Height, limZ);
+        }
+
+        static string NoSplitReason(Brep brep, bool splitOn) =>
+            brep == null ? "메쉬라서" : !brep.IsSolid ? "닫힌 솔리드가 아니라서" : !splitOn ? "나누기(Split)가 꺼져 있어서" : "";
 
         // 기본 STL 폴더: 지난번에 고른 곳 → Rhino 파일 옆 Bambu → 바탕화면Bambu
         static string DefaultFolder(RhinoDoc doc, Rhino.PersistentSettings st)

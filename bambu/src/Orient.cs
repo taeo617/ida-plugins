@@ -49,6 +49,14 @@ namespace IDA.Bambu
         public double ContactArea;     // 바닥에 닿는 면
         public double Score;
         public bool Fits;
+        public double BaseWidth;       // 바닥에 닿는 자국의 가장 좁은 폭
+        public int Stability;          // 0 안정 · 1 브림 권장 · 2 불안정(모서리·점으로 섬)
+    }
+
+    // 한 객체의 방향 후보 중: 판에 들어가는 최선(Fit) / 판 크기 무시한 최선(Free = 나눠서 눕힐 때)
+    public class OrientSet
+    {
+        public OrientResult Fit, Free;
     }
 
     public static class Orient
@@ -133,31 +141,74 @@ namespace IDA.Bambu
             return (bestA, bw, bd);
         }
 
+        // 판에 들어가는 방향 중 최선 (없으면 판 크기 무시한 최선, Fits=false)
         public static OrientResult Best(Mesh mesh, double mm, double plateW, double plateD, double plateH)
         {
+            var a = Analyze(mesh, mm, plateW, plateD, plateH);
+            return a.Fit ?? a.Free;
+        }
+
+        // 모든 후보를 판 크기·안정성까지 따져서 Fit / Free 두 개를 돌려줌
+        public static OrientSet Analyze(Mesh mesh, double mm, double plateW, double plateD, double plateH)
+        {
             var mi = MeshInfo.From(mesh);
-            var scored = Candidates(mi).Select(d => (d, s: Score(mi, d, mm))).OrderBy(x => x.s.score).ToList();
-            OrientResult best = null;
-            foreach (var (d, s) in scored.Take(12)) // 점수 좋은 12개만 판 크기까지 따져 봄
+            var all = new List<OrientResult>();
+            foreach (var d in Candidates(mi))
             {
+                var s = Score(mi, d, mm);
                 var r = DownToBed(d);
                 var pts = mi.V.Select(p => { var q = p; q.Transform(r); return q; }).ToList();
                 var (ang, w, dep) = BestSpin(pts, plateW, plateD);
                 var spin = Transform.Rotation(ang, Vector3d.ZAxis, Point3d.Origin);
                 var x = spin * r;
+                var placed = new List<Point3d>(mi.V.Length);
                 var bb = BoundingBox.Empty;
-                foreach (var p in mi.V) { var q = p; q.Transform(x); bb.Union(q); }
+                foreach (var p in mi.V) { var q = p; q.Transform(x); bb.Union(q); placed.Add(q); }
                 bool fits = ((bb.Diagonal.X <= plateW && bb.Diagonal.Y <= plateD) || (bb.Diagonal.Y <= plateW && bb.Diagonal.X <= plateD)) && bb.Diagonal.Z <= plateH;
-                double score = s.score + (fits ? 0 : 100);
-                if (best == null || score < best.Score)
+
+                // 바닥 자국(바닥에서 0.3mm 안의 점)의 가장 좁은 폭으로 쓰러질지 판단
+                double h = bb.Diagonal.Z;
+                var foot = placed.Where(q => q.Z - bb.Min.Z < 0.3 * mm).ToList();
+                double bw = MinWidth(foot);
+                int stab = Stab(s.contact / Math.Max(mi.Total, 1e-9), bw, h, mm);
+                double score = s.score
+                             + (stab == 2 ? 3.0 : stab == 1 ? 0.3 : 0)   // 쓰러질 자세는 크게 감점
+                             + Math.Max(0, h / mm - 150) / 110.0;          // 150mm 넘게 높으면 시간·흔들림 감점
+
+                var move = Transform.Translation(-bb.Min.X, -bb.Min.Y, -bb.Min.Z);
+                all.Add(new OrientResult
                 {
-                    var move = Transform.Translation(-bb.Min.X, -bb.Min.Y, -bb.Min.Z);
-                    best = new OrientResult
-                    {
-                        Xform = move * x, Width = bb.Diagonal.X, Depth = bb.Diagonal.Y, Height = bb.Diagonal.Z,
-                        OverhangArea = s.overhang, ContactArea = s.contact, Score = score, Fits = fits,
-                    };
-                }
+                    Xform = move * x, Width = bb.Diagonal.X, Depth = bb.Diagonal.Y, Height = h,
+                    OverhangArea = s.overhang, ContactArea = s.contact, Score = score, Fits = fits,
+                    BaseWidth = bw, Stability = stab,
+                });
+            }
+            var sorted = all.OrderBy(o => o.Score).ToList();
+            return new OrientSet { Free = sorted.FirstOrDefault(), Fit = sorted.FirstOrDefault(o => o.Fits) };
+        }
+
+        // 낮은 건 안 쓰러짐. 바닥 폭 ≥ 높이/4 안정, ≥ 높이/6 브림 권장, 그보다 좁거나 모서리·점으로만 닿으면 불안정
+        static int Stab(double contactRatio, double baseW, double h, double mm)
+        {
+            if (h <= 15 * mm) return 0;
+            if (contactRatio < 0.003 || baseW < 1 * mm) return 2;
+            if (baseW >= h / 4) return 0;
+            if (baseW >= h / 6) return 1;
+            return 2;
+        }
+
+        // 점들을 XY에서 돌려 보며 가장 좁은 폭 (0~177.5°, 2.5° 간격)
+        static double MinWidth(List<Point3d> pts)
+        {
+            if (pts.Count < 2) return 0;
+            var sample = pts.Count > 3000 ? pts.Where((p, i) => i % (pts.Count / 3000 + 1) == 0).ToList() : pts;
+            double best = double.MaxValue;
+            for (int k = 0; k < 72; k++)
+            {
+                double a = k * Math.PI / 72, c = Math.Cos(a), s = Math.Sin(a);
+                double lo = double.MaxValue, hi = double.MinValue;
+                foreach (var p in sample) { double v = p.X * c - p.Y * s; if (v < lo) lo = v; if (v > hi) hi = v; }
+                best = Math.Min(best, hi - lo);
             }
             return best;
         }

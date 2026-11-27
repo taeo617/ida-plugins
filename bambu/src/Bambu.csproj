@@ -5,7 +5,7 @@
     <AssemblyName>bambu</AssemblyName>
     <RootNamespace>IDA.Bambu</RootNamespace>
     <TargetExt>.rhp</TargetExt>
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
     <Title>bambu</Title>
     <Description>선택한 객체를 뱀부랩 X2D에 맞게 서포트가 적은 방향으로 눕히고, 크면 나누고, 판별로 배치해 STL로 내보내기</Description>
     <Company>found/Founded</Company>
